@@ -1,0 +1,73 @@
+{
+    "products" : [{
+            "name" : "Dongle RFPLAYER RFP1000",
+            "id" : "RFP1000",
+            "documentation" : "http://www.ziblue.com/",
+            "type" : "rfplayer.rfp1000"
+        }
+    ],
+    "configuration" : [],
+    "xpl_commands" : {},
+    "xpl_stats" : {},
+    "commands" : {
+        "update_firmware" : {
+            "name" : "Update firmware",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "upd-firm",
+                    "data_type" : "DT_String",
+                    "conversion" : ""
+                }
+            ]
+        }
+    },
+    "sensors" : {
+        "rfp_status" : {
+            "name" : "RPF Status",
+            "incremental": false,
+            "data_type" : "DT_State",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        }
+    },
+    "device_types" : {
+        "rfplayer.rfp1000" : {
+            "description" : "USB key with 2 independent Radio Frequency transceivers 433 Mhz and 868 Mhz",
+            "id" : "rfplayer.rfp1000",
+            "name" : "Dongle RFP1000",
+            "commands" : ["update_firmware"],
+            "sensors" : ["rfp_status"],
+            "parameters" : [{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "RPF1000 usb device : /dev/rfp1000",
+                    "type" : "string"
+                }
+            ]
+        }
+    },
+    "identity" : {
+        "author" : "Nico0084, Maikel Punie",
+        "author_email" : "nico84dev at gmail.com, maikel.punie at gmail.com",
+        "tags" : ["RF Player", "433 Mhz", "868 Mhz", "X10", "RTS", "VISONIC", "BLYSS", "CHACON", "OREGONV1", "OREGONV2", "OREGONV3/OWL", "DOMIA", "X2D", "KD101", "PARROT"],
+        "dependencies" : [
+            {
+                "id": "pyserial (>=3.0)",
+                "type": "python"
+            }
+        ],
+        "description" : "Handle RFPlayer device form ZiBlue compagny",
+        "domogik_min_version" : "0.5.0",
+        "name" : "rfplayer",
+         "type" : "plugin",
+        "version" : "0.1.0"
+    },
+    "json_version" : 2
+}
