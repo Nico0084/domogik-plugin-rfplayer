@@ -44,6 +44,7 @@ Implements
 import json
 import serial
 import time
+import os
 import traceback
 from threading import Thread, Lock
 from Queue import Queue, Empty, Full
@@ -129,6 +130,11 @@ class SerialRFPlayer(object):
         """ Get RFP type from pyhon class."""
         return self.__class__.__name__
 
+    @property
+    def RFP_FirmWare_Id(self):
+        """ Get value returned by HELLO command"""
+        return "File Download is done!"
+
     def getHeaderData(self, data):
         """ Return header type of packet
               @param data: raw data from serial RFPlayer
@@ -173,8 +179,10 @@ class SerialRFPlayer(object):
                 else:
                     self.rfPlayer = serial.Serial(self.RFP_device, self.baudrate, self.bytesize, self.parity,
                                                                self.stopbits, self.timeout, self.xonxoff, self.rtscts, self.dsrdtr)
-                    self.rfPlayer.write(b'ZIA++HELLO\r')
-                    id = self.rfPlayer.readline()
+                    with self.RFP_Lock:
+                        self.rfPlayer.reset_output_buffer()
+                        self.rfPlayer.write(b'ZIA++HELLO\r')
+                        id = self.rfPlayer.readline()
                     if id.find(self.RFP_Id) != -1 :
                         self.log.info(u"{0} {1} CONNECTED : {2}".format(self.RFP_type, self.RFP_device, id))
                         self.set_JSON_Format()
@@ -210,14 +218,14 @@ class SerialRFPlayer(object):
         self._cb_register_thread(liste_process)
         liste_process.start()
         write_process = Thread(None,
-                             self._write_daemon_RFP,
+                             self._daemon_queue_write,
                              "write_packets_process",
                              (),
                              {})
         self._cb_register_thread(write_process)
         write_process.start()
         read_process = Thread(None,
-                             self._read_daemon_RFP,
+                             self._daemon_queue_read,
                              "Read_Queue_recept",
                              (),
                              {})
@@ -261,7 +269,7 @@ class SerialRFPlayer(object):
                                 if index != -1 :
                                     reqNum = self.getReqNum(buffer[self.HEADSIZE:])
                                     if reqNum != 0 : print(u"****** A ReqNum is find in data : {0}".format(reqNum))
-                                self.log.debug(u"Queuing  for {0} data received : {1}".format(self.RFP_device, buffer))
+                                self.log.debug(u"Queuing for {0} data received : {1}".format(self.RFP_device, buffer))
                                 self.RFP_received.put_nowait({'header': header, 'data': buffer[self.HEADSIZE:]})
                 except serial.SerialException:
                     self.log.error(u"Error while reading {0} device {1} (disconnected ?) : {2}".format(self.RFP_type, self.RFP_device, traceback.format_exc()))
@@ -288,15 +296,23 @@ class SerialRFPlayer(object):
                         header = self.getHeaderData(buffer)
                         if header['Sync'] :
                             if header['Qualifier'] == self.Q_REP :
-                                index = buffer.find('reqNum')
-                                if index != -1 :
-                                    reqNum = self.getReqNum(buffer[self.HEADSIZE:])
-                                    if reqNum == ackFor['reqNum'] :
-                                        self.log.debug(u"Queuing for {0} response reqNum {1} : {2}".format(self.RFP_device, reqNum, buffer))
-                                        self.RFP_received.put_nowait({'header': header, 'data': buffer[self.HEADSIZE:], 'ackFor': ackFor})
-                                        return True
-                                self.log.debug(u"Data response received on {0} not the reqNum '{0}' one we wait. Nevertheless queuing :{1}".format(self.RFP_device, buffer))
-                                self.RFP_received.put_nowait({'header': header, 'data': buffer[self.HEADSIZE:]})
+                                if len(buffer[self.HEADSIZE:]) > 2: # some Q_REP have no data !
+                                    index = buffer.find('reqNum')
+                                    if index != -1 :
+                                        reqNum = self.getReqNum(buffer[self.HEADSIZE:])
+                                        if reqNum == ackFor['reqNum'] :
+                                            self.log.debug(u"Queuing for {0} response reqNum {1} : {2}".format(self.RFP_device, reqNum, buffer))
+                                            self.RFP_received.put_nowait({'header': header, 'data': buffer[self.HEADSIZE:], 'ackFor': ackFor})
+                                            return True
+                                    else :
+                                        if ackFor['command'] == 'UPDATE FIRMWARE' : # In case no reqNum, must be end off download.
+                                            self.log.debug(u"Queuing for {0} response download firmware : {1}".format(self.RFP_device, buffer))
+                                            self.RFP_received.put_nowait({'header': header, 'data': buffer[self.HEADSIZE:], 'ackFor': ackFor})
+                                            return True
+                                    self.log.debug(u"Data response received on {0} Without reqNum, not the one we wait. Nevertheless queuing :{1}".format(self.RFP_device, buffer))
+                                    self.RFP_received.put_nowait({'header': header, 'data': buffer[self.HEADSIZE:]})
+                                else :
+                                    print(u" *********** No data **********")
                             else :
                                 self.log.debug(u"Data received on {0} Not reponse type the one we wait. Nevertheless queuing :{1}".format(self.RFP_device, buffer))
                                 self.RFP_received.put_nowait({'header': header, 'data': buffer[self.HEADSIZE:]})
@@ -320,7 +336,7 @@ class SerialRFPlayer(object):
                 self.log.error(u"Error while writing on {0} device {1} (disconnected ?) : {2}".format(self.RFP_type, self.RFP_device, traceback.format_exc()))
                 self.close()
 
-    def _write_daemon_RFP(self):
+    def _daemon_queue_write(self):
         """ Listen send Queue, write on RFPlayer and wait for reponse if nessecary.
         """
         self.log.info(u"***** Start write daemon Queue {0} on {1} *****".format(self.RFP_type, self.RFP_device))
@@ -341,7 +357,7 @@ class SerialRFPlayer(object):
             self._waiting_for_reponse = False
         self.log.info(u"***** Write daemon Queue {0} on {1} stopped *****".format(self.RFP_type, self.RFP_device))
 
-    def _read_daemon_RFP(self):
+    def _daemon_queue_read(self):
         """ Listen receive Queue, call calback registered.
         """
         self.log.info(u"***** Start receive daemon Queue {0} on {1} *****".format(self.RFP_type, self.RFP_device))
@@ -353,19 +369,18 @@ class SerialRFPlayer(object):
             except Empty:
                 continue
 #            print(u"----- Data Queue receive : {0}".format(data))
-            if self._cb_receive is not None :
-                if data['header']['Qualifier'] == self.Q_REP:
-                    msg = self.decode_JSON(data['data'])
-                    if msg != {}:
-                        if 'ackFor' in data :
-                            msg.update({'ackFor': data['ackFor']})
-                            if data['ackFor']['callback']is not None :
-                                data['ackFor']['callback'](msg)
-                            else :
-                                self._cb_receive(msg)
+            if data['header']['Qualifier'] == self.Q_REP:
+                msg = self.decode_data(data['data'])
+                if msg != {}:
+                    if 'ackFor' in data :
+                        if data['ackFor']['callback']is not None :
+                            data['ackFor']['callback'](msg['data'], data['ackFor']['command'])
                         else :
-                            self._cb_receive(msg)
-                elif data['header']['Qualifier'] == self.Q_XML:
+                            if self._cb_receive is not None: self._cb_receive(msg['data'])
+                    else :
+                        if self._cb_receive is not None: self._cb_receive(msg['data'])
+            elif self._cb_receive is not None :
+                if data['header']['Qualifier'] == self.Q_XML:
                     msg = self.decode_XML(data['data'])
                     if msg != {}:
                         self._cb_receive(msg)
@@ -404,9 +419,61 @@ class SerialRFPlayer(object):
         cmd +=" {0}".format(command)
         self.write_RFP.put_nowait({'data': cmd, 'response': response, 'ackFor': ackFor})
 
+    def update_firmware(self, firmFile):
+        """ Send a new firmware to RFPLAYER
+            lock all request during process who take 2mins.
+            @parm firmFile : firmware file location
+        """
+        if os.path.isfile(firmFile) :
+            if self.isOpen :
+                try:
+                    with self.RFP_Lock:
+                        self.log.info(u"Start Update firmware on {0} device {1} File {2}, Wait ...".format(self.RFP_type, self.RFP_device, firmFile))
+                        lines = open(firmFile,"rb").readlines()
+                        nbLines = len(lines)
+                        n = 0
+                        i = 0
+                        step =[x for x in range(0,111, 10)]
+                        for l in lines:
+                            self.rfPlayer.write(l)
+                            n += 1
+                            progress = int(round( (n / float(nbLines)) * 100))
+                            if progress == step[i]:
+                                i += 1
+                                self.log.info(u"Update firmware download {0}%".format(progress))
+                        self.log.info(u"Update firmware on {0} device {1} File downloaded, Wait for internal check ...".format(self.RFP_type, self.RFP_device))
+                        self.wait_RFP_response({'command': 'UPDATE FIRMWARE', 'reqNum': 0, 'callback': self.validate_UpdFirmware}, 80)
+                except serial.SerialException:
+                        self.log.error(u"Error while update firmware on {0} device {1} (disconnected ?) : {2}".format(self.RFP_type, self.RFP_device, traceback.format_exc()))
+                        self.close()
+        else :
+            self.log.warning(u"Update firmware on {0} device {1} fail : File {2} not exist.".format(self.RFP_type, self.RFP_device, firmFile))
+
+    def validate_UpdFirmware(self, data, ack=''):
+        """ Check if message return after firmware update is ok, called by callback request.
+            @param data: data formated in JSON
+            @param ack: source request, empty if not an ack.
+        """
+        if data.find(self.RFP_FirmWare_Id) != -1 :
+                self.log.info(u"Update firmware on {0} device {1} : {2}".format(self.RFP_type, self.RFP_device, data))
+                self.close()
+                self.log.info(u"Update firmware, wait reboot {0}s ...".format(60))
+                self.stop.wait(60) # wait for RFP reboot
+                if SerialRFPlayer.open(self) :
+                    self.getStatus()
+        else :
+            self.log.warning(u"Update firmware on {0} device {1} fail : {2}".format(self.RFP_type, self.RFP_device, data))
+
     def getStatus(self):
-        """ Send a STATUS command to rfplayer must be overwrited."""
+        """ Send a STATUS command to rfplayer. Must be overwrited."""
         return {}
+
+    def setStatus(self, data, ack):
+        """ Set STATUS from rfplayer.  Must be overwrited.
+            @param data: data formated in JSON
+            @param ack: source request, empty if not an ack.
+        """
+        pass
 
     def getReqNum(self, packet):
         """ Extract RefNum from data (JSON)"""
@@ -417,21 +484,35 @@ class SerialRFPlayer(object):
                 if k2 == 'reqNum' : return int(data[k][k2])
         return 0
 
-    def decode_JSON(self, data):
-        """ Put in queue a command to send to RFPLAYER
+    def decode_data(self, data):
+        """ Find and decode response from RFPLAYER
              @param data : data that could parse in JSON
              @return : data in JSON format
         """
-        retval ={}
-        try :
-            retval = json.loads(data)
-#            print(u" ******* Data JSON decode OK ********")
-        except :
-            self.log.error(u"{0} on {1} fail decode JSON :{2} \n{3}".format(self.RFP_type, self.RFP_device, data, traceback.format_exc()))
+        msg = self.decode_JSON(data)
+        if msg != {} : return {"type": self.Q_JSON, 'data': msg}
+        msg = self.decode_XML(data)
+        if msg != {} : return {"type": self.Q_XML, 'data': msg}
+        msg = self.decode_TEXT(data)
+        return {"type": self.Q_TXT, 'data': msg}
+
+    def decode_JSON(self, data):
+        """ Try JSON decode response from RFPLAYER
+             @param data : data that could parse in JSON
+             @return : data in JSON format
+        """
+        retval = {}
+        if len(data) > 2 :
+            try :
+                retval = json.loads(data)
+    #            print(u" ******* Data JSON decode OK ********")
+            except :
+                pass
+#                self.log.error(u"{0} on {1} fail decode JSON :{2} \n{3}".format(self.RFP_type, self.RFP_device, data, traceback.format_exc()))
         return retval
 
     def decode_XML(self, data):
-        """ Put in queue a command to send to RFPLAYER
+        """ Try XML decode response from RFPLAYER
              @param data : data that could parse in XML
              @return : data in SJON format
         """
@@ -439,21 +520,23 @@ class SerialRFPlayer(object):
         retval ={}
         try :
             retval = json.loads(data)
-            print(u" ******* Data XML decode OK ********")
+#            print(u" ******* Data XML decode OK ********")
         except :
-            self.log.error(u"{0} on {1} fail decode XML :{2} \n{3}".format(self.RFP_type, self.RFP_device, data, traceback.format_exc()))
+            pass
+#            self.log.error(u"{0} on {1} fail decode XML :{2} \n{3}".format(self.RFP_type, self.RFP_device, data, traceback.format_exc()))
         return retval
 
     def decode_TEXT(self, data):
-        """ Put in queue a command to send to RFPLAYER
+        """ Try TEXT decode response from RFPLAYER
              @param data : data that could parse in TEXT
              @return : data in JSON format
         """
-        # TODO : Handle data XML, if this proves useful ?
-        retval ={}
+        # TODO : Handle data TXT, useful for some result command
+        retval = ""
         try :
-            retval = json.loads(data)
+            retval = data
             print(u" ******* Data TEXT decode OK ********")
         except :
-            self.log.error(u"{0} on {1} fail decode TXT :{2} \n{3}".format(self.RFP_type, self.RFP_device, data, traceback.format_exc()))
+            pass
+#            self.log.error(u"{0} on {1} fail decode TXT :{2} \n{3}".format(self.RFP_type, self.RFP_device, data, traceback.format_exc()))
         return retval

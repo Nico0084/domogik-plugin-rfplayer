@@ -94,13 +94,16 @@ class SerialRFP1000(SerialRFPlayer):
             self.log.info(u"Get Status of {0}".format(self.RFP_device))
             self.send_to_RFP('STATUS JSON', True, self.setStatus)
 
-    def setStatus(self, data):
-        """ Decode Status data from RFP100 JSON """
-        if 'ackFor' in data and data['ackFor']['command'] == 'STATUS JSON' :
+    def setStatus(self, data, ack=''):
+        """ Decode Status data from RFP100 JSON, can be call by callback request.
+            @param data: data formated in JSON
+            @param ack: source request, empty if not an ack.
+        """
+        if ack == 'STATUS JSON' :
             self.status = {}
-            self.log.debug(u"RFP1000 {0} receive STATUS result".format(self.RFP_device))
+            self.log.debug(u"RFP1000 on {0} receive STATUS result".format(self.RFP_device))
         else:
-            self.log.debug(u"RFP1000 {0} receive complement STATUS".format(self.RFP_device))
+            self.log.debug(u"RFP1000 on {0} receive complement STATUS".format(self.RFP_device))
         if 'systemStatus' in data :
             self.status['systemStatus'] = data['systemStatus']
         if 'radioStatus' in data :
@@ -121,6 +124,9 @@ if __name__ == "__main__":
     import logging
     import threading
     import sys
+
+    FIRMWARE = '../data/FW256K_V107_ZIBLUE_RFPLAYER_RFP1000_FIRMWARE.txt'
+    FIRMWARE = ''   # comment to activate firmware update test after ~10 sec started
 
     FORMAT = '%(asctime)s %(name)s %(levelname)s %(message)s'
 
@@ -145,10 +151,14 @@ if __name__ == "__main__":
         print(u"****** Message transmit to 0MQ : {0}\n".format(msg))
 
     RFP = SerialRFP1000(logging, stop, '/dev/rfplayer', fake_MQSending, fake_registerThread)
+    cpt = 0
     if RFP.open():
         try :
             while True :
-                time.sleep(0.2)
+                if cpt == 100 and FIRMWARE != "":
+                    RFP.update_firmware(FIRMWARE)
+                time.sleep(0.1)
+                cpt+=1
         except :
             stop.set()
             print(traceback.format_exc())
