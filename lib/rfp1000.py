@@ -77,7 +77,7 @@ class SerialRFP1000(SerialRFPlayer):
     @property
     def RFP_Id(self):
         """ Get value returned by HELLO command"""
-        return "ZIA--Welcome to Ziblue Dongle 433/868Mhz!"
+        return "ZIA--Welcome to Ziblue Dongle RFPLAYER (RFP1000"
 
     def open(self):
         """ Open serial com and start communication."""
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     import threading
     import sys
 
-    FIRMWARE = '../data/FW256K_V107_ZIBLUE_RFPLAYER_RFP1000_FIRMWARE.txt'
+    FIRMWARE = '../data/FW256K_V112_ZIBLUE_RFPLAYER_RFP1000_FIRMWARE.txt'
     FIRMWARE = ''   # comment to activate firmware update test after ~10 sec started
 
     FORMAT = '%(asctime)s %(name)s %(levelname)s %(message)s'

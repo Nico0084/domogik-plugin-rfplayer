@@ -19,6 +19,16 @@
                     "conversion" : ""
                 }
             ]
+        },
+        "shutter-control" : {
+            "name" : "Update firmware",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "Up_Down",
+                    "data_type" : "DT_UpDown",
+                    "conversion" : ""
+                }
+            ]
         }
     },
     "sensors" : {
@@ -26,6 +36,188 @@
             "name" : "RPF Status",
             "incremental": false,
             "data_type" : "DT_State",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "battery" : {
+            "name" : "Battery",
+            "incremental": false,
+            "data_type" : "DT_Battery",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "battery_status" : {
+            "name" : "Battery status",
+            "incremental": false,
+            "data_type" : "DT_Binary",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "rf_quality": {
+            "name": "Signal strength",
+            "incremental" : false,
+            "data_type": "DT_Scaling",
+            "conversion": "",
+            "timeout" : 600,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "tamper": {
+            "name": "tamper",
+            "incremental" : false,
+            "data_type": "DT_OpenClose",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "alarm": {
+            "name": "Alarm",
+            "incremental" : false,
+            "data_type": "DT_Binary",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "low_battery": {
+            "name": "Low battery",
+            "incremental" : false,
+            "data_type": "DT_Bool",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "supervisor_alive": {
+            "name": "Supervisor/Alive",
+            "incremental" : false,
+            "data_type": "DT_State",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "button_1": {
+            "name": "button 1",
+            "incremental" : false,
+            "data_type": "DT_Switch",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "button_2": {
+            "name": "button 2",
+            "incremental" : false,
+            "data_type": "DT_Switch",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "button_3": {
+            "name": "button 3",
+            "incremental" : false,
+            "data_type": "DT_Switch",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "button_4": {
+            "name": "button 4",
+            "incremental" : false,
+            "data_type": "DT_Switch",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "temperature" : {
+            "name" : "temperature",
+            "incremental": false,
+            "data_type" : "DT_Temp",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "hygrometry" : {
+            "name" : "hygrometry",
+            "incremental": false,
+            "data_type" : "DT_Humidity",
             "conversion" : "",
             "timeout": 0,
             "history": {
@@ -51,11 +243,62 @@
                     "type" : "string"
                 }
             ]
+        },
+        "rfplayer.temperature" : {
+            "description" : "Scientific Oregon  protocol   ( thermo/hygro sensors)",
+            "id" : "rfplayer.temperature",
+            "name" : "Temperature and battery",
+            "commands" : [],
+            "sensors" : ["temperature", "battery_status", "rf_quality"],
+            "parameters" : [{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device address. Example: 0xFFFF",
+                    "type" : "string"
+                },{
+                    "key" : "protocol",
+					"xpl": false,
+                    "description" : "RF Protocol data",
+                    "type" : "choice",
+                    "choices" : {
+                        "1": "X10",
+                        "2": "VISONIC",
+                        "3": "BLYSS",
+                        "4": "CHACON",
+                        "5": "OREGON ",
+                        "6": "DOMIA",
+                        "7": "OWL",
+                        "8": "X2D",
+                        "9": "RTS",
+                        "10": "KD101",
+                        "11": "PARROT"
+                    }
+                },{
+                    "key" : "type",
+					"xpl": false,
+                    "description" : "Type of RFP data",
+                    "type" : "choice",
+                    "choices" : {
+                        "0" : "Used by X10 /  DOMIA LITE protocol / PARROT",
+                        "1" : "Used by X10 (24/32 bits ID),  CHACON , KD101, BLYSS",
+                        "2" : "Used by VISONIC",
+                        "3" : "Used by RTS protocol",
+                        "4" : "Used by Scientific Oregon  protocol    (Thermo/Hygro sensors)",
+                        "5" : "Used by Scientific Oregon  protocol  (Atmospheric  pressure  sensors)",
+                        "6" : "Used by Scientific Oregon  protocol  (Wind  sensors)",
+                        "7" : "Used by Scientific Oregon  protocol  (UV  sensors) ",
+                        "8" : "Used by OWL  (Energy/power sensors) ",
+                        "9" : "Used by Scientific Oregon  protocol  (Rain  sensors) ",
+                        "10" : "Used by Thermostats  X2D protocol",
+                        "11" : "Used by Alarm X2D protocol"
+                    }
+                }
+            ]
         }
     },
     "identity" : {
-        "author" : "Nico0084, Maikel Punie",
-        "author_email" : "nico84dev at gmail.com, maikel.punie at gmail.com",
+        "author" : "Nico0084",
+        "author_email" : "nico84dev at gmail.com",
         "tags" : ["RF Player", "433 Mhz", "868 Mhz", "X10", "RTS", "VISONIC", "BLYSS", "CHACON", "OREGONV1", "OREGONV2", "OREGONV3/OWL", "DOMIA", "X2D", "KD101", "PARROT"],
         "dependencies" : [
             {

@@ -47,7 +47,7 @@ import time
 import os
 import traceback
 from threading import Thread, Lock
-from Queue import Queue, Empty, Full
+from Queue import Queue, Empty
 
 PORT = '/dev/rfplayer' # Linux with UDEV rule
 #PORT = 'COM3'  # Windows
@@ -68,10 +68,12 @@ class SerialRFPlayer(object):
     SDQ_ASCII = 'A'
     SDQ_BIN = 'O'
     Q_CMD = '++'
-    Q_REP = '--'
-    Q_XML = '22'
-    Q_JSON = '33'
-    Q_TXT = '44'
+    Q_REP = '--'    # Synchronous answers of the commands interpreter
+    Q_HEX = '00'    # Asynchronous received RF Frames. Enabled by “FORMAT HEXA”
+    Q_HEXF = '11'   # Asynchronous received RF Frames. Enabled by “FORMAT HEXA FIXED”
+    Q_XML = '22'    # Asynchronous received RF Frames. Enabled by “FORMAT XML”
+    Q_JSON = '33'   # Asynchronous received RF Frames. Enabled by “FORMAT JSON”
+    Q_TXT = '44'    # Asynchronous received RF Frames. Set by “FORMAT TEXT”
 
     def __init__(self, log, stop, RFP_device, cb_receive, cb_register_thread,
                  baudrate=115200, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE,
@@ -169,6 +171,11 @@ class SerialRFPlayer(object):
     def isOpen(self):
         """ Get RFPLAYER header for json data"""
         return True if self.rfPlayer is not None else False
+
+    @property
+    def domogikDevice(self):
+        """Return domogik device id"""
+        return self.RFP_device
 
     def open(self):
         """ Open serial com."""
