@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import traceback
+import threading
 
 from domogik_packages.plugin_rfplayer.lib.infotypes import *
 from domogik_packages.plugin_rfplayer.lib.rfp1000 import SerialRFP1000
@@ -82,13 +83,19 @@ class RFPManager(object):
                 if checkIfConfigured(dmgDevice["device_type_id"], dmgDevice ) :
                     if dmgDevice["device_type_id"] == "rfplayer.rfp1000" :
                         self.rfpClients[clID] = SerialRFP1000(self.log, self._plugin.get_stop(),
-                                                              dmgDevice["parameters"]["device"]["value"],
+                                                              self._plugin.get_parameter(dmgDevice, 'device'),
                                                               self._handle_RFP_Data, self._plugin.register_thread)
                     else :
                         self.log.error(u"Manager RFPLayer : RFPLayer Client type {0} not exist, not added.".format(clID))
                         return False
                     self.log.info(u"Manager RFPLayer : created new client {0}.".format(clID))
-                    self.rfpClients[clID].open()
+                    if self.rfpClients[clID].open() :
+                        # Start thread for starting rfplayer services
+                        timer = self._plugin.get_parameter(dmgDevice, 'timer_status')
+                        if timer != 0 :
+                            Timer(timer, self.rfpClients[clID].ping, self._plugin).start()
+                        else :
+                            self.log.info(u"Ping timer for client {0} disable.".format(clID))
                 else :
                     self.log.warning(u"Manager RFPLayer : device not configured can't add new client {0}.".format(clID))
                     return False
@@ -203,5 +210,91 @@ class RFPManager(object):
                     self.log.warning(u"Inconsistent RFP protocol ({0}) for info type {1}. data : {2}".format(data['header']['protocol'], iType.infoType, data))
             else :
                 self.log.warning(u"Unknown RFP Data type : {0}".format(data))
+        elif type(data) == dict and 'client' in data:
+            cIds = self.getIdsClient(data['client'])
+            for cId in cIds :
+                client = self.getClient(cId)
+                if client is not None :
+                    for dmgdev in self._plugin.getDmgDevices(client.RFP_device):
+                            for s in dmgdev['sensors']:
+                                if 'status' in data and dmgdev['sensors'][s]['reference'] == "rfp_status":
+                                    self._send_sensor(dmgdev, dmgdev['sensors'][s]['id'], dmgdev['sensors'][s]['data_type'], data['status'])
         else:
             self.log.warning(u"Bad RFP Data format : {0}".format(data))
+
+class Timer():
+    """
+    Timer will call a callback function each n seconds
+    """
+
+    def __init__(self, time, cb, plugin):
+        """
+        Constructor : create the internal timer
+        @param time : time of loop in second
+        @param cb : callback function which will be call eact 'time' seconds
+        """
+        self._stop = threading.Event()
+        self._timer = self.__InternalTimer(time, cb, self._stop, plugin.log)
+        self._plugin = plugin
+        self.log = plugin.log
+        plugin.register_timer(self)
+        plugin.register_thread(self._timer)
+        self.log.debug(u"New timer created : %s " % self)
+
+    def start(self):
+        """
+        Start the timer
+        """
+        self._timer.start()
+
+    def get_stop(self):
+        """ Returns the threading.Event instance used to stop the Timer
+        """
+        return self._stop
+
+    def get_timer(self):
+        """
+        Waits for the internal thread to finish
+        """
+        return self._timer
+
+    def __del__(self):
+        self.log.debug(u"__del__ TimerManager")
+        self.stop()
+
+    def stop(self):
+        """
+        Stop the timer
+        """
+        self.log.debug(u"Timer : stop, try to join() internal thread")
+        self._stop.set()
+        self._timer.join()
+        self.log.debug(u"Timer : stop, internal thread joined, unregister it")
+        self._plugin.unregister_timer(self._timer)
+
+    class __InternalTimer(threading.Thread):
+        '''
+        Internal timer class
+        '''
+        def __init__(self, time, cb, stop, log):
+            '''
+            @param time : interval between each callback call
+            @param cb : callback function
+            @param stop : Event to check for stop thread
+            '''
+            threading.Thread.__init__(self)
+            self._time = time
+            self._cb = cb
+            self._stop = stop
+            self.name = "internal-timer"
+            self.log = log
+
+        def run(self):
+            '''
+            Call the callback every X seconds
+            '''
+            # wait first time set
+            self._stop.wait(self._time)
+            while not self._stop.isSet():
+                self._cb()
+                self._stop.wait(self._time)

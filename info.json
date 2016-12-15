@@ -10,16 +10,6 @@
     "xpl_commands" : {},
     "xpl_stats" : {},
     "commands" : {
-        "update_firmware" : {
-            "name" : "Update firmware",
-            "return_confirmation" : true,
-            "parameters" : [{
-                    "key" : "upd-firm",
-                    "data_type" : "DT_String",
-                    "conversion" : ""
-                }
-            ]
-        },
         "shutter-control" : {
             "name" : "Update firmware",
             "return_confirmation" : true,
@@ -33,7 +23,7 @@
     },
     "sensors" : {
         "rfp_status" : {
-            "name" : "RPF Status",
+            "name" : "RFP Status",
             "incremental": false,
             "data_type" : "DT_State",
             "conversion" : "",
@@ -234,64 +224,47 @@
             "description" : "USB key with 2 independent Radio Frequency transceivers 433 Mhz and 868 Mhz",
             "id" : "rfplayer.rfp1000",
             "name" : "Dongle RFP1000",
-            "commands" : ["update_firmware"],
+            "commands" : [],
             "sensors" : ["rfp_status"],
             "parameters" : [{
                     "key" : "device",
 					"xpl": false,
                     "description" : "RPF1000 usb device : /dev/rfp1000",
                     "type" : "string"
+                },
+                {
+                    "key" : "timer_status",
+					"xpl": false,
+                    "description" : "Timer (seconds) for poll RFP status (0 to desactivat)",
+                    "type" : "integer"
                 }
             ]
         },
-        "rfplayer.temperature" : {
-            "description" : "Scientific Oregon  protocol   ( thermo/hygro sensors)",
-            "id" : "rfplayer.temperature",
-            "name" : "Temperature and battery",
+        "rfplayer.temperature.lowbattery" : {
+            "description" : "Like Scientific Oregon  protocol (thermo sensors)",
+            "id" : "rfplayer.temperature.lowbattery",
+            "name" : "Temperature and low battery flag",
             "commands" : [],
             "sensors" : ["temperature", "battery_status", "rf_quality"],
             "parameters" : [{
                     "key" : "device",
 					"xpl": false,
-                    "description" : "Device address. Example: 0xFFFF",
+                    "description" : "Device address. Example: 0xFFFF.0.3",
                     "type" : "string"
-                },{
-                    "key" : "protocol",
+                }
+            ]
+        },
+        "rfplayer.temperature.hygrometry.lowbattery" : {
+            "description" : "Like Scientific Oregon  protocol (thermo/hygro sensors)",
+            "id" : "rfplayer.temperature.hygrometry.lowbattery",
+            "name" : "Temperature/Humidity and low battery flag",
+            "commands" : [],
+            "sensors" : ["temperature", "hygrometry", "battery_status", "rf_quality"],
+            "parameters" : [{
+                    "key" : "device",
 					"xpl": false,
-                    "description" : "RF Protocol data",
-                    "type" : "choice",
-                    "choices" : {
-                        "1": "X10",
-                        "2": "VISONIC",
-                        "3": "BLYSS",
-                        "4": "CHACON",
-                        "5": "OREGON ",
-                        "6": "DOMIA",
-                        "7": "OWL",
-                        "8": "X2D",
-                        "9": "RTS",
-                        "10": "KD101",
-                        "11": "PARROT"
-                    }
-                },{
-                    "key" : "type",
-					"xpl": false,
-                    "description" : "Type of RFP data",
-                    "type" : "choice",
-                    "choices" : {
-                        "0" : "Used by X10 /  DOMIA LITE protocol / PARROT",
-                        "1" : "Used by X10 (24/32 bits ID),  CHACON , KD101, BLYSS",
-                        "2" : "Used by VISONIC",
-                        "3" : "Used by RTS protocol",
-                        "4" : "Used by Scientific Oregon  protocol    (Thermo/Hygro sensors)",
-                        "5" : "Used by Scientific Oregon  protocol  (Atmospheric  pressure  sensors)",
-                        "6" : "Used by Scientific Oregon  protocol  (Wind  sensors)",
-                        "7" : "Used by Scientific Oregon  protocol  (UV  sensors) ",
-                        "8" : "Used by OWL  (Energy/power sensors) ",
-                        "9" : "Used by Scientific Oregon  protocol  (Rain  sensors) ",
-                        "10" : "Used by Thermostats  X2D protocol",
-                        "11" : "Used by Alarm X2D protocol"
-                    }
+                    "description" : "Device address. Example: 0xFFFF.1.2",
+                    "type" : "string"
                 }
             ]
         }

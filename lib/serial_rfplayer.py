@@ -192,6 +192,7 @@ class SerialRFPlayer(object):
                         id = self.rfPlayer.readline()
                     if id.find(self.RFP_Id) != -1 :
                         self.log.info(u"{0} {1} CONNECTED : {2}".format(self.RFP_type, self.RFP_device, id))
+                        if self._cb_receive is not None: self._cb_receive({'client': self, 'status': 1})
                         self.set_JSON_Format()
                         return True
                     else:
@@ -214,6 +215,7 @@ class SerialRFPlayer(object):
         except:
                 self.log.error(u"Error while closing {0} device {1} (disconnected ?) : {2}".format(self.RFP_type, self.RFP_device, traceback.format_exc()))
         self.rfPlayer = None
+        if self._cb_receive is not None: self._cb_receive({'client': self, 'status': 0})
 
     def start_services(self):
         """ Start all daemon service in threads"""
@@ -409,6 +411,7 @@ class SerialRFPlayer(object):
         while not self.stop.isSet():
                 self._read_RFP_data()
         self.log.info(u"***** listening {0} on {1} stopped *****".format(self.RFP_type, self.RFP_device))
+        if self._cb_receive is not None: self._cb_receive({'client': self, 'status': 0})
 
     def send_to_RFP(self, command, response=False, callback = None):
         """ Put in queue a command to send to RFPLAYER
@@ -481,6 +484,22 @@ class SerialRFPlayer(object):
             @param ack: source request, empty if not an ack.
         """
         pass
+
+    def ping(self):
+        """ Send a PING command to rfplayer."""
+        msg = {'client': self,  'status': 0}
+        if  self.rfPlayer is not None :
+            with self.RFP_Lock:
+                self.rfPlayer.reset_output_buffer()
+                self.rfPlayer.write(b'ZIA++PING\r')
+                ack = self.rfPlayer.readline()
+                print(ack)
+                if ack.find('PONG') != -1 :
+#                    self.log.debug(u"RFPLAYER on {0} receive PING reponse".format(self.RFP_device))
+                    msg['status'] = 1
+                else :
+                    self.log.warning(u"RFPLAYER on {0} don't receive PING response".format(self.RFP_device))
+        if self._cb_receive is not None: self._cb_receive(msg)
 
     def getReqNum(self, packet):
         """ Extract RefNum from data (JSON)"""

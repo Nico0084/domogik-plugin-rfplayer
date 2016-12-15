@@ -46,7 +46,6 @@ try:
     from domogikmq.message import MQMessage
 
     from domogik_packages.plugin_rfplayer.lib.rfplayer import RFPManager
-    import threading
     import sys
     import os
     import traceback
@@ -88,9 +87,6 @@ class RFPlayer(Plugin):
             return
         self.register_cb_update_devices(self.managerRFP.refreshDevices)
         self.add_mq_sub('device.update')
-        # Start thread for starting rfplayer services
-#        self._ctrlsHBeat = Timer(60, self.managerRFP.sendHbeatCtrlsState, self)
-#        self._ctrlsHBeat.start()
         self.log.info('****** Init RFPlayer plugin manager completed ******')
         self.ready()
 
@@ -175,85 +171,6 @@ class RFPlayer(Plugin):
     def publishMsg(self, category, content):
         self._pub.send_event(category, content)
         self.log.debug(u"Publishing over MQ <{0}>, data : {1}".format(category, content))
-
-class Timer():
-    """
-    Timer will call a callback function each n seconds
-    """
-#    _time = 0
-#    _callback = None
-#    _timer = None
-
-    def __init__(self, time, cb, plugin):
-        """
-        Constructor : create the internal timer
-        @param time : time of loop in second
-        @param cb : callback function which will be call eact 'time' seconds
-        """
-        self._stop = threading.Event()
-        self._timer = self.__InternalTimer(time, cb, self._stop, plugin.log)
-        self._plugin = plugin
-        self.log = plugin.log
-        plugin.register_timer(self)
-        plugin.register_thread(self._timer)
-        self.log.debug(u"New timer created : %s " % self)
-
-    def start(self):
-        """
-        Start the timer
-        """
-        self._timer.start()
-
-    def get_stop(self):
-        """ Returns the threading.Event instance used to stop the Timer
-        """
-        return self._stop
-
-    def get_timer(self):
-        """
-        Waits for the internal thread to finish
-        """
-        return self._timer
-
-    def __del__(self):
-        self.log.debug(u"__del__ TimerManager")
-        self.stop()
-
-    def stop(self):
-        """
-        Stop the timer
-        """
-        self.log.debug(u"Timer : stop, try to join() internal thread")
-        self._stop.set()
-        self._timer.join()
-        self.log.debug(u"Timer : stop, internal thread joined, unregister it")
-        self._plugin.unregister_timer(self._timer)
-
-    class __InternalTimer(threading.Thread):
-        '''
-        Internal timer class
-        '''
-        def __init__(self, time, cb, stop, log):
-            '''
-            @param time : interval between each callback call
-            @param cb : callback function
-            @param stop : Event to check for stop thread
-            '''
-            threading.Thread.__init__(self)
-            self._time = time
-            self._cb = cb
-            self._stop = stop
-            self.name = "internal-timer"
-            self.log = log
-
-        def run(self):
-            '''
-            Call the callback every X seconds
-            '''
-            while not self._stop.isSet():
-                self._cb()
-                self._stop.wait(self._time)
-
 
 if __name__ == "__main__":
     RFPlayer()
