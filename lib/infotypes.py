@@ -197,30 +197,79 @@ class InfoType4(InfoType) :
         return None
 
 class InfoType5(InfoType4) :
-    """Info Type for OREGON protocol"""
+    """Info Type for OREGON protocol
+        inherit from InfoType4 of OREGON"""
 
     infoType = "5"
 
-    def get_RFP_data_to_sensor(self, data, data_type):
+    def get_RFP_data_to_sensor(self, sensor):
         """ Return sensor value from RFP data"""
+        print("Format value : {0}".format(self.data))
+        try :
+            for mes in self.data['infos']['measures']:
+                if mes['type'] == sensor['name']: # TODO: Check type and name correspondance on real data
+                    if sensor['data_type'] == "DT_Temp" and mes['unit'] == 'Celsius':
+                        return float(mes['value'])
+                    elif sensor['data_type'] == "DT_Humidity" and mes['unit'] == '%':
+                        return int(mes['value'])
+                    elif sensor['data_type'] == "DT_Pressure" and mes['unit'] == 'hPa':
+                        # convert hPa to Pa for DT_Pressure
+                        return int(mes['value']) * 100
+            if sensor['reference'] == "battery_status" :
+                return "0" if self.data['infos']['lowBatt'] == "1" else "1"
+            elif sensor['reference'] == "rf_quality" :
+                return int(self.data['header']['rfQuality']) * 10
+        except :
+            print(u"{0}".format(traceback.format_exc()))
+            pass
         return None
 
 class InfoType6(InfoType4) :
-    """Info Type for OREGON protocol"""
+    """Info Type for OREGON protocol
+        inherit from InfoType4 of OREGON"""
 
     infoType = "6"
 
-    def get_RFP_data_to_sensor(self, data, data_type):
+    def get_RFP_data_to_sensor(self, sensor):
         """ Return sensor value from RFP data"""
+        print("Format value : {0}".format(self.data))
+        try :
+            for mes in self.data['infos']['measures']:
+                if mes['type'] == sensor['name']:  # TODO: Check type and name correspondance on real data
+                    if sensor['data_type'] == "DT_Speed" and mes['unit'] == 'm/s':
+                        return float(mes['value'])
+                    elif sensor['data_type'] == "DT_Angle" and mes['unit'] == 'degree':
+                        return int(mes['value'])
+            if sensor['reference'] == "battery_status" :
+                return "0" if self.data['infos']['lowBatt'] == "1" else "1"
+            elif sensor['reference'] == "rf_quality" :
+                return int(self.data['header']['rfQuality']) * 10
+        except :
+            print(u"{0}".format(traceback.format_exc()))
+            pass
         return None
 
 class InfoType7(InfoType4) :
-    """Info Type for OREGON protocol"""
+    """Info Type for OREGON protocol
+       inherit from InfoType4 of OREGON"""
 
     infoType = "7"
 
-    def get_RFP_data_to_sensor(self, data, data_type):
+    def get_RFP_data_to_sensor(self, sensor):
         """ Return sensor value from RFP data"""
+        print("Format value : {0}".format(self.data))
+        try :
+            for mes in self.data['infos']['measures']:
+                if mes['type'] == sensor['name']:  # TODO: Check type unit and name correspondance on real data
+                    if sensor['data_type'] == "DT_Number" and mes['unit'] == '':
+                        return int(mes['value'])
+            if sensor['reference'] == "battery_status" :
+                return "0" if self.data['infos']['lowBatt'] == "1" else "1"
+            elif sensor['reference'] == "rf_quality" :
+                return int(self.data['header']['rfQuality']) * 10
+        except :
+            print(u"{0}".format(traceback.format_exc()))
+            pass
         return None
 
 class InfoType8(InfoType) :
@@ -240,17 +289,49 @@ class InfoType8(InfoType) :
             return "{0}.{1}.{2}".format(self.data['infos']['id_PHY'], self.data['infos']['adr'], self.data['infos']['channel'])
         return ""
 
-    def get_RFP_data_to_sensor(self, data, data_type):
+    def get_RFP_data_to_sensor(self, sensor):
         """ Return sensor value from RFP data"""
+        print("Format value : {0}".format(self.data))
+        # TODO: Handle qualifier ? D1 = 0 : Only the tatal instaneous power is given, D1 = 1 : power in each imput 1,2,3
+        try :
+            for mes in self.data['infos']['measures']:
+                if mes['type'] == sensor['name']:  # TODO: Check type and name correspondance on real data
+                    if sensor['data_type'] == "DT_ActiveEnergy" and mes['unit'] == 'Wh':
+                        return int(mes['value'])
+                    elif sensor['data_type'] == "DT_Power" and mes['unit'] == 'W': # power, P1, P2, P3
+                        return int(mes['value'])
+            if sensor['reference'] == "battery_status" :
+                return "0" if self.data['infos']['lowBatt'] == "1" else "1"
+            elif sensor['reference'] == "rf_quality" :
+                return int(self.data['header']['rfQuality']) * 10
+        except :
+            print(u"{0}".format(traceback.format_exc()))
+            pass
         return None
 
 class InfoType9(InfoType4) :
-    """Info Type for OREGON protocol"""
+    """Info Type for OREGON protocol
+       inherit from InfoType4 of OREGON"""
 
     infoType = "9"
 
-    def get_RFP_data_to_sensor(self, data, data_type):
+    def get_RFP_data_to_sensor(self, sensor):
         """ Return sensor value from RFP data"""
+        print("Format value : {0}".format(self.data))
+        try :
+            for mes in self.data['infos']['measures']:
+                if mes['type'] == sensor['name']:  # TODO: Check type and name correspondance on real data
+                    if sensor['data_type'] == "DT_mMeter" and mes['unit'] == 'mm':
+                        return float(mes['value'])
+                    elif sensor['data_type'] == "DT_mMeterHour" and mes['unit'] == 'mm/h':
+                        return float(mes['value'])
+            if sensor['reference'] == "battery_status" :
+                return "0" if self.data['infos']['lowBatt'] == "1" else "1"
+            elif sensor['reference'] == "rf_quality" :
+                return int(self.data['header']['rfQuality']) * 10
+        except :
+            print(u"{0}".format(traceback.format_exc()))
+            pass
         return None
 
 class InfoType10(InfoType0) :

@@ -217,6 +217,160 @@
                     "expire": 0,
                     "round_value": 0
                 }
+        },
+        "pressure" : {
+            "name" : "pressure",
+            "incremental": false,
+            "data_type" : "DT_Pressure",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "wind_speed" : {
+            "name" : "wind speed",
+            "incremental": false,
+            "data_type" : "DT_Speed",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "direction" : {
+            "name" : "direction",
+            "incremental": false,
+            "data_type" : "DT_Angle",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "uv" : {
+            "name" : "uv",
+            "incremental": false,
+            "data_type" : "DT_Number",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "energy" : {
+            "name" : "energy",
+            "incremental": false,
+            "data_type" : "DT_ActiveEnergy",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "power" : {
+            "name" : "power",
+            "incremental": false,
+            "data_type" : "DT_Power",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "P1" : {
+            "name" : "P1",
+            "incremental": false,
+            "data_type" : "DT_Power",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "P2" : {
+            "name" : "P2",
+            "incremental": false,
+            "data_type" : "DT_Power",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "P3" : {
+            "name" : "P3",
+            "incremental": false,
+            "data_type" : "DT_Power",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "total_rain" : {
+            "name" : "total rain",
+            "incremental": false,
+            "data_type" : "DT_mMeter",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
+        },
+        "rain" : {
+            "name" : "current rain",
+            "incremental": false,
+            "data_type" : "DT_mMeterHour",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+                }
         }
     },
     "device_types" : {
