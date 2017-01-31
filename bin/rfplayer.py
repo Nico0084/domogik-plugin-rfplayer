@@ -106,19 +106,19 @@ class RFPlayer(Plugin):
         handled = False
         if action[0] == 'rfplayer' :
             self.log.debug(u"Handle MQ request action <{0}>.".format(action))
-            if action[1] in ["manager", "ctrl", "value"] :
+            if action[1] in ["manager", "client"] :
                 handled = True
                 data = msg.get_data()
-                report = self.managerRFP.processRequest("{0}.{1}".format(action[1], action[2]),  msg.get_data())
+                report = self.managerRFP.processRequest("{0}.{1}".format(action[1], action[2]), data)
                 # send the reply
                 reply_msg = MQMessage()
                 reply_msg.set_action("{0}.{1}.{2}".format(action[0], action[1], action[2]))
                 for k, item in report.items():
                     reply_msg.add_data(k, item)
                 self.reply(reply_msg.get())
-                if "ack" in  data and data['ack'] == "pub":
+                if "ack" in data and data['ack'] == "pub":
                     self.publishMsg("{0}.{1}.{2}".format(action[0], action[1], action[2]), report)
-            if not handled :
+        if not handled :
                 self.log.warning(u"MQ request unknown action <{0}>.".format(action))
         elif action[0] == "client" and action[1] == "cmd" :
             # action on dmg device

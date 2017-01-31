@@ -47,10 +47,117 @@ import time
 import traceback
 from serial_rfplayer import SerialRFPlayer
 
+BAND_SPECIF = { 'Frequency': {'cmd' : {
+                                'name' :'FREQ',
+                                'params' :{
+                                    "H": {'values': {"0": u"Shutdown band",
+                                                    "868950": u"868.950Mhz (Default)",
+                                                    "868350": u"868.350Mhz"},
+                                        'help': u"Set the high frequency receiver to Off."},
+                                    "L": {'values': {"0": u"Shutdown band",
+                                                    "433420": u"433.420Mhz",
+                                                    "433920": u"433.920 Mhz (Default)"},
+                                        'help': u"Set the Low frequency receiver to Off."}
+                                    },
+                                },
+                            'help' : u"Receiver frequency on High band (around 868Mhz) or Low band (around 433Mhz). Low and high band receivers work simultaneously. \
+                            Frequency Value of 0 leads to shutdown the selected receiver including the transmitter of the specified band."
+                            },
+                'Selectivity': {'cmd' : {
+                                'name' :'SELECTIVITY',
+                                'params' :{
+                                    "H": {'values': {"0": u"Medium selectivity (300Khz) <Default>",
+                                                     "1": u"Very low selectivity (800Khz), frequency centered between used frequencies (868350-868950)",
+                                                     "2": u"Very low selectivity (800Khz)",
+                                                     "3": u"selectivity (500Khz)",
+                                                     "4": u"Medium selectivity (300Khz)",
+                                                     "5": u"High selectivity (200Khz)"},
+                                        'help': u"Set the high frequency (868 Mhz) receiver selectivity."},
+                                    "L": {'values': {"0": u"Medium selectivity (300Khz) <Default>",
+                                                     "1": u"Very low selectivity (800Khz), frequency centered between used frequencies (433420-433920)",
+                                                     "2": u"Very low selectivity (800Khz)",
+                                                     "3": u"selectivity (500Khz)",
+                                                     "4": u"Medium selectivity (300Khz)",
+                                                     "5": u"High selectivity (200Khz)"},
+                                        'help': u"Set the low frequency (433 Mhz) receiver selectivity."},
+                                    },
+                                },
+                                'help' : u"High frequency receiver selectivity on the selected band (L:433/H:868Mhz). \
+                            Selectivity is the ability to filter out of band signals.. \
+                            NOTE: Higher selectivity (low value in term of Khz) means higher RF receiver sensitivity, but out of frequency transmitting appliances could be discarded. \
+                            Lower selectivity (high value in term of Khz) means lower RF receiver sensitivity (lower performance). \
+                            Old cheap devices can have a large frequency offset or shift over time especially when outdoor used."
+                            },
+                'Sensitivity': {'cmd' : {
+                                'name' :'SENSITIVITY',
+                                'params' :{
+                                    "H": {'values': {"0": u"High sensitivity (-0dB) <Default>)",
+                                                     "1": u"Very low sensitivity (-18dB)",
+                                                     "2": u"low sensitivity (-12dB))",
+                                                     "3": u"medium sensitivity (-6dB)",
+                                                     "4": u"high sensitivity (-0dB) <Default>"},
+                                        'help': u"Set the high frequency (868 Mhz) receiver sensitivity."},
+                                    "L": {'values': {"0": u"High sensitivity (-0dB) <Default>)",
+                                                     "1": u"Very low sensitivity (-18dB)",
+                                                     "2": u"low sensitivity (-12dB))",
+                                                     "3": u"medium sensitivity (-6dB)",
+                                                     "4": u"high sensitivity (-0dB) <Default>"},
+                                        'help': u"Set the low frequency (433 Mhz) receiver sensitivity."},
+                                    },
+                                },
+                                'help' : u"Radio Frequency receiver sensitivity on the selected band (L:433/H:868Mhz) (Ultra-High Frequency analog antenna sensitivity). \
+                            Decreasing RF sensitivity could be only useful in specific cases during limited time, as pairing procedure or RF sequence learning with \
+                            isolation from far RF transmitters."
+                            },
+                'DspTrigger': {'cmd' : {
+                                'name' :'DSPTRIGGER',
+                                'params' :{
+                                    "H": {'values': {str(x):u"{0} dBm{1}".format(x, " <Default>" if x==6 else "") for x in range(4,21)},
+                                        'help': u"Set the high frequency (868 Mhz) receiver DSP value in dBm."},
+                                    "L": {'values': {str(x):u"{0} dBm{1}".format(x, " <Default>" if x==8 else "") for x in range(4,21)},
+                                        'help': u"Set the low frequency (433 Mhz) receiver DSP value in dBm."},
+                                    },
+                                },
+                                'help' : u"Digital Signal Processing trigger on the selected band (L:433/H:868Mhz) \
+                            Define the smallest signal amplitude leading to start frame detection and analysis. \
+                            Low trigger value means high sensitivity. \
+                            Too big trigger value leads to forget useful frames. \
+                            Too low trigger value leads to detect ghostly frames, generated by floor noise, and sometimes forget useful frames during this time."
+                            },
+                'RFlinkTrigger': {'cmd' : {
+                                'name' :'RFLINKTRIGGER',
+                                'params' :{
+                                    "H": {'values': {str(x):u"{0} dBm{1}".format(x, " <Default>" if x==6 else "") for x in range(4,21)},
+                                        'help': u"Set the high frequency (868 Mhz) receiver smallest signal amplitude value in dBm."},
+                                    "L": {'values': {str(x):u"{0} dBm{1}".format(x, " <Default>" if x==8 else "") for x in range(4,21)},
+                                        'help': u"Set the low frequency (433 Mhz) receiver smallest signal amplitude value in dBm."},
+                                    },
+                                },
+                                'help' : u"RFLINK trigger on the selected band (L:433/H:868Mhz). \
+                            Define the smallest signal amplitude leading to start frame detection and analysis. \
+                            Low trigger value means high sensitivity. \
+                            Too big trigger value leads to forget useful frames. \
+                            Too low trigger value leads to detect ghostly frames, generated by floor noise, and sometimes forget useful frames during this time."
+                            },
+                'LBT':        {'cmd' : {
+                                'name' :'LBT',
+                                'params' : {
+                                        'values': dict({"0": u"Inhibits LBT function"}.items() +
+                                                {str(x):u"{0} dBm{1}".format(x, " <Default>" if x==16 else "") for x in range(6,31)}.items()),
+                                        'help': u"Set receiver Listen Before Talk value in dBm."},
+                                },
+                                'help' : u"Out of bounds value of val leads to come back to the default value. \
+                            Val = 0 inhibits LBT function. \
+                            Default is LBT enabled (very highly recommended). \
+                            When enabled, the transmitter will “listen” the current activity on the same frequency and wait a silence before to “talk”. \
+                            Sent frames cannot be delayed more than 3 seconds."
+                            },
+                        }
+
 class SerialRFP1000(SerialRFPlayer):
     """Base class to handle RFPLAYER on serial port"""
 
-    def __init__(self, log, stop, rfp_device, cb_receive, cb_register_thread,
+    def __init__(self, log, stop, rfp_device, cb_receive, cb_register_thread, cb_publishMsg,
                  baudrate=115200, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE,
                  stopbits=serial.STOPBITS_ONE, timeout=0.1, xonxoff=0, rtscts=1, dsrdtr=None, fake_device=None):
         """ Init An RFP1000 device and start communication.
@@ -72,7 +179,8 @@ class SerialRFP1000(SerialRFPlayer):
         """
         self._sendMessage = cb_receive
         self.status = {}
-        SerialRFPlayer.__init__(self, log, stop, rfp_device, self.handle_msg, cb_register_thread, baudrate, bytesize, parity, stopbits, timeout, xonxoff, rtscts, dsrdtr, fake_device)
+        SerialRFPlayer.__init__(self, log, stop, rfp_device, self.handle_msg, cb_register_thread, cb_publishMsg,
+                                baudrate, bytesize, parity, stopbits, timeout, xonxoff, rtscts, dsrdtr, fake_device)
 
     @property
     def RFP_Id(self):
@@ -119,6 +227,70 @@ class SerialRFP1000(SerialRFPlayer):
             return
         self.log.debug("Sending to 0MQ : {0}".format(msg))
         self._sendMessage(msg)
+
+    def getInfos(self):
+        """Return All informations formated to UI"""
+        retval = SerialRFPlayer.getInfos(self)
+        retval['status'] = self.formatStatus()
+        return retval
+
+    def formatStatus(self):
+        retVal = {}
+        if 'radioStatus' in self.status :
+            retVal['radioStatus'] = []
+            for i, bands in self.status['radioStatus'].iteritems() :
+                for band in bands :
+                    if 'i' in band :
+                        b = {'band':'unknown', 'params':{}}
+                        typeP = 'values'
+                        for param in band['i']:
+                            if param['n'] == 'Frequency' :
+                                if param['v'].find('433') != -1 :
+                                    b['band'] = "433Mhz"
+                                    typeP = 'L'
+                                else:
+                                    b['band'] = "868Mhz"
+                                    typeP = 'H'
+                                break
+                        for param in band['i']:
+                            detail = dict()
+                            detail['value'] = param['v']
+                            detail['unit'] = param['unit']
+                            detail['comment'] = param['c']
+                            detail['help'] = ""
+                            if param['n'] in BAND_SPECIF :
+                                detail['help'] = BAND_SPECIF[param['n']]['help']
+                                for cType in BAND_SPECIF[param['n']]['cmd']['params'] :
+                                    if cType == typeP :
+                                        if typeP == 'values' :
+                                            detail['command'] = BAND_SPECIF[param['n']]['cmd']['params']
+                                        else :
+                                            detail['command'] = BAND_SPECIF[param['n']]['cmd']['params'][typeP]
+                                        break
+                            b['params'].update({param['n']:detail})
+                        retVal['radioStatus'].append(b)
+        else :
+            retVal['radioStatus'] = 'Not read'
+        if 'systemStatus' in self.status :
+            prot = dict()
+            detail = dict()
+            for param in self.status['systemStatus']['info'] :
+                if 'transmitter' not in param and 'receiver' not in param and 'repeater' not in param :
+                    detail[param['n']] = {'value': param['v'], 'unit': param['unit'], 'comment': param['c']}
+                else :
+                    key = param.keys()[0]
+                    if key not in prot : prot[key] = {}
+                    if 'available' in param[key] :
+                        for p in param[key]['available']['p'] :
+                            if p not in prot[key] : prot[key][p] = False
+                    elif 'enabled' in param[key] :
+                        for p in param[key]['enabled']['p'] :
+                            prot[key][p] = True
+
+            retVal['systemStatus'] = {'infos': detail, 'protocoles': prot}
+        else :
+            retVal['systemStatus'] = 'Not read'
+        return retVal
 
 if __name__ == "__main__":
     import logging

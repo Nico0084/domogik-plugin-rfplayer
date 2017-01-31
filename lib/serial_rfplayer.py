@@ -75,7 +75,7 @@ class SerialRFPlayer(object):
     Q_JSON = '33'   # Asynchronous received RF Frames. Enabled by “FORMAT JSON”
     Q_TXT = '44'    # Asynchronous received RF Frames. Set by “FORMAT TEXT”
 
-    def __init__(self, log, stop, RFP_device, cb_receive, cb_register_thread,
+    def __init__(self, log, stop, RFP_device, cb_receive, cb_register_thread, cb_publishMsg,
                  baudrate=115200, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE,
                  stopbits=serial.STOPBITS_ONE, timeout=2, xonxoff=0, rtscts=1, dsrdtr=None, fake_device=None):
         """ Init Serial com base
@@ -100,6 +100,7 @@ class SerialRFPlayer(object):
         self.RFP_device = RFP_device
         self._cb_receive = cb_receive
         self._cb_register_thread = cb_register_thread
+        self._cb_publishMsg = cb_publishMsg
         self.fake_device = fake_device
         self.rfPlayer = None
         self.status = {}
@@ -121,6 +122,8 @@ class SerialRFPlayer(object):
         self.xonxoff = xonxoff
         self.rtscts = rtscts
         self.dsrdtr = dsrdtr
+        self._state = "stopped"
+        self._error = ""
 
     @property
     def RFP_Id(self):
@@ -185,23 +188,41 @@ class SerialRFPlayer(object):
                     pass
                 else:
                     self.rfPlayer = serial.Serial(self.RFP_device, self.baudrate, self.bytesize, self.parity,
-                                                               self.stopbits, self.timeout, self.xonxoff, self.rtscts, self.dsrdtr)
+                                                  self.stopbits, self.timeout, self.xonxoff, self.rtscts, self.dsrdtr)
+                    self._state = "Starting"
+                    self._cb_publishMsg(self)
                     with self.RFP_Lock:
                         self.rfPlayer.reset_output_buffer()
                         self.rfPlayer.write(b'ZIA++HELLO\r')
                         id = self.rfPlayer.readline()
+                    print(id)
                     if id.find(self.RFP_Id) != -1 :
-                        self.log.info(u"{0} {1} CONNECTED : {2}".format(self.RFP_type, self.RFP_device, id))
-                        if self._cb_receive is not None: self._cb_receive({'client': self, 'status': 1})
+                        self._state = "alive"
+                        self._error = ""
                         self.set_JSON_Format()
+                        if self._cb_receive is not None: self._cb_receive({'client': self, 'status': 1})
+                        self.log.info(u"{0} {1} CONNECTED : {2}".format(self.RFP_type, self.RFP_device, id))
+                        self._cb_publishMsg(self)
                         return True
                     else:
-                        self.log.error(u"{0} {1} Bad identification : {2}".format(self.RFP_type, self.RFP_device, id))
-                        self.close()
+                        self._error = u"{0} {1} cant't be open. Bad identification : {2}".format(self.RFP_type, self.RFP_device, id)
+                        self._state = "dead"
+                        self.log.error(self._error)
+                        self._cb_publishMsg(self)
+                        try:
+                            self.rfPlayer.close()
+                        except:
+                            pass
             except :
                 self.rfPlayer = None
-                self.log.error(u"Error while opening {0} device {1} (disconnected ?) : {2}".format(self.RFP_type, self.RFP_device, traceback.format_exc()))
-                self.close()
+                self._state = "dead"
+                self._error = u"Error while opening {0} device {1} (disconnected ?) : {2}".format(self.RFP_type, self.RFP_device, traceback.format_exc())
+                self.log.error(self._error)
+                self._cb_publishMsg(self)
+                try:
+                    self.rfPlayer.close()
+                except:
+                    pass
         else :
             self.log.warning(u"{0} device {1} allready open".format(self.RFP_type, self.RFP_device))
         return False
@@ -212,10 +233,14 @@ class SerialRFPlayer(object):
         self.log.info(u"Close {0} on {1}".format(self.RFP_type, self.RFP_device))
         try:
             self.rfPlayer.close()
+            self._state = "stopped"
         except:
-                self.log.error(u"Error while closing {0} device {1} (disconnected ?) : {2}".format(self.RFP_type, self.RFP_device, traceback.format_exc()))
+            error = u"Error while closing {0} device {1} (disconnected ?) : {2}".format(self.RFP_type, self.RFP_device, traceback.format_exc())
+            if self._state != 'dead': self._error = error
+            self.log.error(error)
         self.rfPlayer = None
         if self._cb_receive is not None: self._cb_receive({'client': self, 'status': 0})
+        self._cb_publishMsg(self)
 
     def start_services(self):
         """ Start all daemon service in threads"""
@@ -497,8 +522,11 @@ class SerialRFPlayer(object):
                 if ack.find('PONG') != -1 :
 #                    self.log.debug(u"RFPLAYER on {0} receive PING reponse".format(self.RFP_device))
                     msg['status'] = 1
+                    self._error = ""
                 else :
-                    self.log.warning(u"RFPLAYER on {0} don't receive PING response".format(self.RFP_device))
+                    self._error = u"RFPLAYER on {0} don't receive PING response".format(self.RFP_device)
+                    self.log.warning(self._error)
+                    self._cb_publishMsg(self)
         if self._cb_receive is not None: self._cb_receive(msg)
 
     def getReqNum(self, packet):
@@ -566,3 +594,20 @@ class SerialRFPlayer(object):
             pass
 #            self.log.error(u"{0} on {1} fail decode TXT :{2} \n{3}".format(self.RFP_type, self.RFP_device, data, traceback.format_exc()))
         return retval
+
+    def getState(self):
+        """ Return rfplayer State informations"""
+        retVal= {'lasterror' : self._error}
+        retVal['open'] = self.isOpen
+        retVal['state'] = self._state
+        retVal['error'] = self._error if self._state == "dead" else  ""
+        return retVal
+
+    def getInfos(self):
+        """ Return rfplayer informations"""
+        retVal= self.getState()
+        retVal['serialParam'] = {'baudrate' : self.baudrate, 'bytesize' : self.bytesize, 'parity' : self.parity, 'stopbits' : self.stopbits
+                                 ,'timeout' : self.timeout, 'xonxoff' : self.xonxoff, 'rtscts' : self.rtscts, 'dsrdtr' : self.dsrdtr}
+        retVal['status'] = {}
+        return retVal
+

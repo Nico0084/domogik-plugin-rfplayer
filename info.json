@@ -10,12 +10,82 @@
     "xpl_commands" : {},
     "xpl_stats" : {},
     "commands" : {
-        "shutter-control" : {
-            "name" : "Update firmware",
+        "switch" : {
+            "name" : "On/Off",
             "return_confirmation" : true,
             "parameters" : [{
-                    "key" : "Up_Down",
+                    "key" : "value",
+                    "data_type" : "DT_Switch",
+                    "conversion" : ""
+                }
+            ]
+        },
+        "switch_all" : {
+            "name" : "ALL On/Off",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "value",
+                    "data_type" : "DT_Switch",
+                    "conversion" : ""
+                }
+            ]
+        },
+        "shutter" : {
+            "name" : "Shutter",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "value",
                     "data_type" : "DT_UpDown",
+                    "conversion" : ""
+                }
+            ]
+        },
+        "push_button" : {
+            "name" : "My",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "value",
+                    "data_type" : "DT_Trigger",
+                    "conversion" : ""
+                }
+            ]
+        },
+        "button_1" : {
+            "name" : "button 1",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "value",
+                    "data_type" : "DT_Trigger",
+                    "conversion" : ""
+                }
+            ]
+        },
+        "button_2" : {
+            "name" : "button 2",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "value",
+                    "data_type" : "DT_Trigger",
+                    "conversion" : ""
+                }
+            ]
+        },
+        "button_3" : {
+            "name" : "button 3",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "value",
+                    "data_type" : "DT_Trigger",
+                    "conversion" : ""
+                }
+            ]
+        },
+        "button_4" : {
+            "name" : "button 4",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "value",
+                    "data_type" : "DT_Trigger",
                     "conversion" : ""
                 }
             ]
@@ -120,6 +190,34 @@
                 "round_value": 0
             }
         },
+        "switch": {
+            "name": "switch",
+            "incremental" : false,
+            "data_type": "DT_Switch",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
+        "switch_all": {
+            "name": "switch all",
+            "incremental" : false,
+            "data_type": "DT_Switch",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : false,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
         "supervisor_alive": {
             "name": "Supervisor/Alive",
             "incremental" : false,
@@ -137,7 +235,7 @@
         "button_1": {
             "name": "button 1",
             "incremental" : false,
-            "data_type": "DT_Switch",
+            "data_type": "DT_Trigger",
             "conversion": "",
             "timeout" : 0,
             "history": {
@@ -151,7 +249,7 @@
         "button_2": {
             "name": "button 2",
             "incremental" : false,
-            "data_type": "DT_Switch",
+            "data_type": "DT_Trigger",
             "conversion": "",
             "timeout" : 0,
             "history": {
@@ -165,7 +263,7 @@
         "button_3": {
             "name": "button 3",
             "incremental" : false,
-            "data_type": "DT_Switch",
+            "data_type": "DT_Trigger",
             "conversion": "",
             "timeout" : 0,
             "history": {
@@ -179,7 +277,7 @@
         "button_4": {
             "name": "button 4",
             "incremental" : false,
-            "data_type": "DT_Switch",
+            "data_type": "DT_Trigger",
             "conversion": "",
             "timeout" : 0,
             "history": {
@@ -399,7 +497,7 @@
             "id" : "rfplayer.temperature.lowbattery",
             "name" : "Temperature and low battery flag",
             "commands" : [],
-            "sensors" : ["temperature", "battery_status", "rf_quality"],
+            "sensors" : ["temperature", "low_battery", "rf_quality"],
             "parameters" : [{
                     "key" : "device",
 					"xpl": false,
@@ -413,7 +511,7 @@
             "id" : "rfplayer.temperature.hygrometry.lowbattery",
             "name" : "Temperature/Humidity and low battery flag",
             "commands" : [],
-            "sensors" : ["temperature", "hygrometry", "battery_status", "rf_quality"],
+            "sensors" : ["temperature", "hygrometry", "low_battery", "rf_quality"],
             "parameters" : [{
                     "key" : "device",
 					"xpl": false,

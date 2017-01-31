@@ -37,7 +37,7 @@ def checkIfConfigured(deviceType,  device):
 
 class RFPManager(object):
 
-    """" Manager RFPlayer(s).
+    """" Manager RFPlayer(s)
     """
     def __init__ (self, plugin, cb_send_sensor) :
         """Init RFPlayer manager client"""
@@ -45,6 +45,7 @@ class RFPManager(object):
         self._send_sensor = cb_send_sensor
         self._stop = plugin.get_stop()  # TODO : pas forcement util ?
         self.rfpClients = {} # list of all RFPlayer
+        self._plugin.publishMsg('rfplayer.manager.state', self.getManagerInfo())
         # get the devices list
         self.refreshDevices(self._plugin.get_device_list(quit_if_no_device = False, max_attempt = 2))
         if not self.rfpClients :
@@ -84,7 +85,7 @@ class RFPManager(object):
                     if dmgDevice["device_type_id"] == "rfplayer.rfp1000" :
                         self.rfpClients[clID] = SerialRFP1000(self.log, self._plugin.get_stop(),
                                                               self._plugin.get_parameter(dmgDevice, 'device'),
-                                                              self._handle_RFP_Data, self._plugin.register_thread)
+                                                              self._handle_RFP_Data, self._plugin.register_thread, self.publishRFPlayerMsg)
                     else :
                         self.log.error(u"Manager RFPLayer : RFPLayer Client type {0} not exist, not added.".format(clID))
                         return False
@@ -118,7 +119,7 @@ class RFPManager(object):
 
     def getIdsClient(self, idToCheck):
         """Get RFPLayer client key ids."""
-        retval =[]
+        retval = []
         findId = ""
         self.log.debug (u"getIdsClient check for device : {0}".format(idToCheck))
         if isinstance(idToCheck, SerialRFP1000) :
@@ -185,6 +186,7 @@ class RFPManager(object):
     def refreshDevices(self, dmgDevices):
         """ Call all clients to refreshe they devices"""
         self.checkClientsRegistered(dmgDevices)
+        self._plugin.publishMsg('rfplayer.manager.state', self.getManagerInfo())
 
     def getCliDmgDevices(self, id, dmgDevices):
         """ Return domogik device of client."""
@@ -194,18 +196,98 @@ class RFPManager(object):
                     return device
         return None
 
+    def liklyDmgDevices(self, iType):
+        """ Return possible DmgDevices from infoType build with RFP data"""
+        likelyDevices = {iType.dmgDevice_Id : {'listSensors':  iType.get_Available_Sensors(),
+                               'listCmds': iType.get_Available_Commands(),
+                               'reference': u"Protocol {0}".format(iType.protocol_name)}}
+        print(u"***************** likly domogik devices for node ****************")
+        print(likelyDevices)
+        knownDeviceTypes = self.findDeviceTypes(likelyDevices)
+        print(u"***************** existing domogik device_types for node ****************")
+        print(knownDeviceTypes)
+        if knownDeviceTypes :
+            self.registerDetectedDevice(knownDeviceTypes)
+
+    def findDeviceTypes(self, likelyDevices):
+        """Search if device_type correspond to likely devices and return them."""
+        retval = {}
+        if likelyDevices :
+            for id, dev_type in self._plugin.json_data['device_types'].items():
+                for refDev in likelyDevices :
+                    print(u"   Validate likely device_type of {0} for {1}".format(id, refDev))
+                    sensorsOK = False
+                    cmdsOK = False
+                    if likelyDevices[refDev]['listSensors'] :
+                        for sensors in likelyDevices[refDev]['listSensors'] :
+                            print(u"       Compare sensor {0} / {1}".format(sensors, dev_type['sensors']))
+                            if len(sensors) == len(dev_type['sensors']) and all(i in dev_type['sensors'] for i in sensors):
+                                sensorsOK = True
+#                                print "    Sensor(s) OK"
+                    else :
+                        if not dev_type['sensors'] :
+                            sensorsOK = True
+#                            print "    Sensor(s) OK (No sensor)"
+                    if likelyDevices[refDev]['listCmds'] :
+                        for cmds in likelyDevices[refDev]['listCmds'] :
+                            print(u"       Compare command {0} / {1}".format(cmds, dev_type['commands']))
+                            if len(cmds) == len(dev_type['commands']) and all(i in dev_type['commands'] for i in cmds):
+                                cmdsOK = True
+#                                print "    Command(s) OK"
+                    else :
+                        if not dev_type['commands'] :
+                            cmdsOK = True
+#                            print "    Command(s) OK (no command)"
+                    if sensorsOK and cmdsOK :
+                        try :
+                           len(retval[refDev])
+                        except :
+                            retval[refDev] = {'device_types': [], 'reference': likelyDevices[refDev]['reference']}
+                        retval[refDev]['device_types'].append(id)
+        return retval
+
+    def registerDetectedDevice(self, likelyDevices):
+        """Call device_detected"""
+        for refDev in likelyDevices.keys() :
+            for devType in likelyDevices[refDev]['device_types'] :
+                print "Try to register device {0}, {1}".format(refDev, devType)
+                if devType in ['rfplayer.rfp1000'] :
+                    globalP = [{
+                            "key" : "device",
+                            "value": u"{0}".format(refDev)
+                        }]
+                else :
+                    globalP = [{
+                            "key" : "device",
+                            "value": u"{0}".format(refDev)
+                        }]
+                self._plugin.device_detected({
+                    "device_type" : devType,
+                    "reference" : likelyDevices[refDev]['reference'],
+                    "global" : globalP,
+                    "xpl" : [],
+                    "xpl_commands" : {},
+                    "xpl_stats" : {}
+                })
+
     def _handle_RFP_Data(self, data):
         """Handle RFP data to domogik sensor """
-        if type(data) == dict and 'frame' in data:
+        if type(data) == dict and 'frame' in data :
             iType = getInfoType(data['frame'])
             if iType is not None :
                 if iType.isValid :
-                    for dmgdev in self._plugin.getDmgDevices(iType.dmgDevice_Id):
-                        for s in dmgdev['sensors']:
-                            value = iType.get_RFP_data_to_sensor(dmgdev['sensors'][s])
-                            print(u" Value formatted : {0} for sensor {1}".format(value, dmgdev['sensors'][s]))
-                            if value is not None :
-                                self._send_sensor(dmgdev, dmgdev['sensors'][s]['id'], dmgdev['sensors'][s]['data_type'], value)
+                    devices = self._plugin.getDmgDevices(iType.dmgDevice_Id)
+                    if devices != [] :
+                        for dmgdev in devices :
+                            for s in dmgdev['sensors']:
+                                value = iType.get_RFP_data_to_sensor(dmgdev['sensors'][s])
+                                print(u" Value formatted : {0} for sensor {1}".format(value, dmgdev['sensors'][s]))
+                                if value is not None :
+                                    self._send_sensor(dmgdev, dmgdev['sensors'][s]['id'], dmgdev['sensors'][s]['data_type'], value)
+                                else :
+                                    self.log.warning(u"Domogik device {0} not according to info type {1}, sensor not find.\n data : {2}\n device :".format(dmgdev['name'], iType.infoType, data, dmgdev))
+                    else :
+                        self.liklyDmgDevices(iType)
                 else :
                     self.log.warning(u"Inconsistent RFP protocol ({0}) for info type {1}. data : {2}".format(data['header']['protocol'], iType.infoType, data))
             else :
@@ -221,6 +303,47 @@ class RFPManager(object):
                                     self._send_sensor(dmgdev, dmgdev['sensors'][s]['id'], dmgdev['sensors'][s]['data_type'], data['status'])
         else:
             self.log.warning(u"Bad RFP Data format : {0}".format(data))
+
+    def processRequest(self, request, data):
+        """Callback come from MQ (request with reply)"""
+        report = {'error' : u"Unknown request <{0}>, data : {1}".format(request, data)}
+        reqRef = request.split('.')
+        if reqRef[0] == 'manager' :
+            if reqRef[1] == 'getstatus' :
+                report = self.getManagerInfo()
+        if reqRef[0] == 'client' :
+            if reqRef[1] == 'getinfos' :
+                if 'rfplayerID' in data :
+                    client = self.getClient(data['rfplayerID'])
+                    if client is not None :
+                        report = client.getInfos()
+                    else : report['error'] = u"<{0}>, Unknown RFPlayer dongle, data : {1}".format(request, data)
+                else : report['error'] = u"<{0}>, Invalid data format : {1}".format(request, data)
+        return report
+
+    def getManagerInfo(self):
+        """ Return all manger information """
+        report = {}
+        report['status'] = 'alive'
+        report['rfPlayers'] = []
+        for cId in self.rfpClients :
+            info = self.rfpClients[cId].getState()
+            info['rfplayerID'] = cId
+            info['name'] = self.rfpClients[cId].domogikDevice
+            info['dmgDevices'] = self._plugin.getDmgDevices(self.rfpClients[cId].domogikDevice)
+            report['rfPlayers'].append(info)
+        report['error'] = ''
+        return report
+
+    def publishRFPlayerMsg(self, rfPLayer):
+        """Report a message from a RFPLayer"""
+        cIds = self.getIdsClient(rfPLayer)
+        for cId in cIds :
+            info = rfPLayer.getInfos()
+            info['rfplayerID'] = cId
+            info['name'] = self.rfpClients[cId].domogikDevice
+            info['dmgDevices'] = self._plugin.getDmgDevices(self.rfpClients[cId].domogikDevice)
+            self._plugin.publishMsg('rfplayer.client.state', info)
 
 class Timer():
     """
