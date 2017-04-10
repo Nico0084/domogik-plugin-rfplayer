@@ -8,21 +8,21 @@ xPL messages
 No xPL message handle, use only 0MQ
 
 RFPlayer driver compatibility
-========================
+=============================
 
 Plugin just need serial connection for working with RFPlayer dongle.
 
 Driver identification to UDEV Rules
 -----------------------------------
 
-.. todo::
-   Explain udev rule...
+.. todo :: 
+	Explain how to create an udev rule...
 
 
 InfoType structure
 ------------------
 
-.. todo::
-   Explain how infotype work...
+.. todo ::
+    Explain how infotype work...
 
 

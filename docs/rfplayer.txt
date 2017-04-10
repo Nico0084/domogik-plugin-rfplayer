@@ -27,6 +27,31 @@ Used in Stand Alonemode, it can then act as Plug & Play REPEATER with the possib
 Protocols handled : VISONIC, CHACON/DIO, DOMIA, X10, DELTADORE, SOMFY, BLYSS (433Mhz), KD101, PARROT, Scientific Oregon, OWL Firmware is upgradable.
 Supported by domogik >=0.5.0 Development is in progress, features will get gradually
 
+Dependencies
+============
+
+There is no dependency.
+
+Install the RFPlayer usb device
+===============================
+
+Create an udev rule
+-------------------
+
+You may create a udev rule for this device. You can find sample udev rules in the **udev/** folder of this plugin.
+
+You just need to copy the choosen sample file in the folder **/etc/udev/rules.d/** and unplug/plug the device.
+
+RFP1000 key
+***********
+
+.. |rfp1000| image:: RFP1000.png
+    :width: 128px
+
+|rfp1000|
+
+You could use **udev/97-usbrfp1000.rules** files. But actually ZiBlue key doesn't handle particular rules key. Detection result could fail.
+
 Plugin configuration
 ====================
 Configuration
@@ -55,11 +80,34 @@ Instance-type : rfplayer.rfp1000 (Dongle RFP1000)
 +----------------+-------------------+------------------------------------------------------------------------------+
 | Description    | What you want     | A short descriptionn for this device.                                        |
 +----------------+-------------------+------------------------------------------------------------------------------+
-| Global         |                   | The path to the RFXCOM RFP1000 device.                                              |
+| Global         |                   | The path to the RFXCOM RFP1000 device.                                       |
 |   device       | /dev/rfp1000      | See udev rule to avoid /dev/ttyUSBx and changed port                         |
 +----------------+-------------------+------------------------------------------------------------------------------+
 | Global         |                   | Timer (seconds) for poll RFP status                                          |
-|   timer_status | 60                |   - "0": desactivat polling.                                                 |
+|   timer_status | 60                |   "0": desactivat polling.                                                   |
 |                |                   | Status is sended to domogik only if changed.                                 |
-+------------- --+-------------------+------------------------------------------------------------------------------+
++----------------+-------------------+------------------------------------------------------------------------------+
 
+Devices capabilities
+====================
+
+Protocoles and device_type
+--------------------------
+
+X10 (433Mhz)
+************
+
+Select corresponding device :
+
+* Temperature sensors : use **rfplayer.temperature.lowbattery** for OREGON (THN122/132/***, THC238/268, THWR288, THRN122, AW129/131)
+* Temperature/Humidity sensors : use **rfplayer.temperature.hygrometry.lowbattery** for OREGON (THGR122/228/238/268/328/810/918/928/, THGN50/122/123/132/800, THGRN228, RTGR328)
+* Temperature/Humidity/Pressure sensors : use **rfplayer.temperature.hygrometry.pressure.lowbattery** for OREGON (THGR918N)
+* Wind speed sensors : use **rfplayer.wind_speed.direction.lowbattery** for OREGON (WGR800)
+* UV sensors : use **rfplayer.uv.lowbattery** for OREGON (UVN800)
+* Rain sensors : use **rfplayer.total_rain.rain.lowbattery** for OREGON (PCR800)
+
+Detected devices
+----------------
+
+.. todo ::
+	Explain how to find device address
