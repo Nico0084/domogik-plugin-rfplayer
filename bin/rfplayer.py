@@ -87,6 +87,7 @@ class RFPlayer(Plugin):
             return
         self.register_cb_update_devices(self.managerRFP.refreshDevices)
         self.add_mq_sub('device.update')
+        self.add_mq_sub('device.new')
         self.log.info('****** Init RFPlayer plugin manager completed ******')
         self.ready()
 
@@ -96,7 +97,8 @@ class RFPlayer(Plugin):
     def on_message(self, msgid, content):
         #Transmit mq message to manager
         Plugin.on_message(self, msgid, content)
-        #For momment no other message than devices.update handled
+        if msgid == "device.new" :
+            print("**************** device.new : {0}".format(content))
 
     def on_mdp_request(self, msg):
         # display the req message

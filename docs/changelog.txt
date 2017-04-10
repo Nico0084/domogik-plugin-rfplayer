@@ -1,0 +1,11 @@
+=========
+Changelog
+=========
+
+0.1.0
+-----
+
+* domogik 0.5 compatibilité
+* Plugin creation
+
+

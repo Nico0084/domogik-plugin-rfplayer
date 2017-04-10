@@ -1,0 +1,223 @@
+{% block content %}
+
+<div class='container-fluid'>
+    <h3>{% trans %}RFPlayer dongle update administration{% endtrans %}</h3>
+    <div class="col-md-6">
+        <div class="row" style="align-items: center; display: flex;">
+            <div class="col-md-8">
+                <div class="form-group">
+                    <label for="FirmwareFile">{% trans %}Firmware file{% endtrans %}</label>
+                    <input type="file" class="form-control-file btn btn-primary" id="FirmwareFile" aria-describedby="fileHelp">
+                    <small id="fileHelp" class="form-text text-muted">{% trans %}Firmware can be updated by a simple encrypted text file. Firmware files are provided by Ziblue.{% endtrans %}</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <button type="button" class="btn btn-danger center-block" id="btStartUpdateF" data-toggle="modal" data-target="#confirmUpdate">
+                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i> START
+                </button>
+            </div>
+        </div>
+        <div class="well well-sm">
+            <ul>
+                <li>{% trans %}A given version of firmware cannot be flashed twice times and is rejected the subsequent times.{% endtrans %}</li>
+                <li>{% trans %}Return to older versions is allowed.{% endtrans %}</li>
+                <li>{% trans %}The update time is a relatively long (2mn):{% endtrans %}</li>
+                <ul>
+                    <li>{% trans %}One minute is spent to download the firmware through the serial line.{% endtrans %}</li>
+                    <li>{% trans %}One minute is spent to verify file integrity at each step and then program the embedded controller.{% endtrans %}</li>
+                </ul>
+                <li>{% trans %}The LED is RED and blinking during this time. The LED remains inactive if the downloaded firmware version is already running. Wait the end of RED blinking.{% endtrans %}</li>
+                <li>{% trans %}The new firmware automatically starts after programming. Restart the dongle (unplug then plug again the dongle) if it doesn’t restart.{% endtrans %}</li>
+                <li>{% trans %}Previous user’s configuration is preserved.{% endtrans %}</li>
+            </ul>
+            <div class="alert alert-info">
+                <i class="fa fa-comments" aria-hidden="true"></i>
+                {% trans %}The principle is “entirely store, verify, then flash, then verify again”, so that power can be down
+at each step of the programming without damage and the programming/flashing phase isn’t critical
+(no “brick” effect){% endtrans %}.
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="alert alert-info text-center" role="alert" id="firmRev"><h4>{% trans %}No file{% endtrans %}</div>
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped active" role="progressbar" id="updateProgress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+            </div>
+        </div>
+    </div>
+    <pre id="firmware" style="height:500px;overflow:auto;white-space:pre-wrap;">
+        {{ manager|safe }}
+    </pre>
+</div>
+
+<!-- Confirmation Update -->
+<div class="modal fade" id="confirmUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">RFPlayer Firmware update</h4>
+      </div>
+      <div class="modal-body">
+        <p>Firmware file : <span id="fileName">firmwareFile</span></p>
+        <h4>Are you sure ?</h4>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="startUpdate">Start update</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+
+$(document).ready( function() {
+    var progressState = 0,
+        firmwareFile = "",
+        firmwareData = null;
+
+    $("#btStartUpdateF").hide();
+    $(document).on('change', ':file', function() {
+        $("#firmRev").html("<div class='text-center'><i class='fa fa-spinner fa-pulse fa-3x fa-fw'></i>"+
+                                "<span class='sr-only'>{% trans %}Loading...</span>{% endtrans %}</div>");
+
+        var input = $(this),
+            numFiles = input.get(0).files ? input.get(0).files.length : 1,
+            label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+        if ( ! window.FileReader ) {
+			return alert( 'FileReader API is not supported by your browser.' );
+		}
+		if ( input.get(0).files && input.get(0).files[0] ) {
+			file = input.get(0).files[0]; // The file
+			fr = new FileReader(); // FileReader instance
+			fr.onload = function () {
+				// Do stuff on onload, use fr.result for contents of file
+            $( '#firmware' ).text(fr.result);
+            var lines = fr.result.split('\n');
+            if (lines[0].search("ZIAUU ") == 0 && lines[1].search("ZIBLUE RFPLAYER ") == 0) {
+                rev = lines[1].split(" ")[2];
+                $("#firmRev").removeClass("alert-info alert-danger").addClass("alert-success").html("<h4>{% trans %}Recognized firmware revision{% endtrans %} : <b>"+rev+"</b></h4>");
+                $("#FirmwareFile").removeClass("btn-primary btn-danger").addClass("btn-success");
+                $("#btStartUpdateF").show();
+                firmwareFile = label;
+                firmwareData = lines;
+            } else {
+                $("#firmRev").removeClass("alert-info alert-success").addClass("alert-danger").html("<h4>{% trans %}Not a valid firmware{% endtrans %}.</h4>");
+                $("#FirmwareFile").removeClass("btn-primary btn-success").addClass("btn-danger");
+                $("#btStartUpdateF").hide();
+                firmwareData = null;
+            };
+			};
+			//fr.readAsText( file );
+			fr.readAsText(file);
+		} else {
+			// Handle errors here
+			alert( "File not selected or browser incompatible." )
+		}
+        input.trigger('fileselect', [numFiles, label]);
+    });
+
+    $(':file').on('fileselect', function(event, numFiles, label) {
+        console.log(numFiles);
+        console.log(label);
+    });
+
+    $('#confirmUpdate').on('show.bs.modal', function (e) {
+        $('#fileName').text(firmwareFile);
+    });
+
+   function sendFirmwareFile(line){
+        var step = 1000;
+        if (line+step > firmwareData.length) { step = firmwareData.length-line; };
+        sendRequest("rfplayer.client.updatefirmware", {"rfplayerID": activeDongle, "firmwareFile": firmwareFile,"firmwareData": firmwareData.slice(line, line+step).join('\n'),
+                                                       'line': line, 'step': step, 'size': firmwareData.length},
+                    function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: '{% trans %}Refresh RFPLayer dongle{% endtrans %}',
+                    text: data.content.error,
+                    delay: 6000
+                });
+                $("#updateProgress").width(0 + "%").text('');
+                $('#firmware').text(data.content.error);
+            } else {
+                $("#dongle-process-running").removeClass("hide");
+                $("#updateProgress").width(data.content.totalprogress + "%").text('Transfert to domogik');
+                $('#firmware').text("Transfert file to domogik : "+data.content.progress + "%\n");
+                if (!data.content.finish) {
+                    sendFirmwareFile(line+step);
+                };
+            };
+        });
+    };
+
+   $("#startUpdate").click(function(){
+        $("#btStartUpdateF").hide();
+        $("#updateProgress").addClass("progress-bar-striped");
+        $('#firmware').text("");
+        progress = 0;
+        sendFirmwareFile(0);
+    });
+
+    var ws_onmessage_rfplayer_update = ws.onmessage;
+    var intervalId = null;
+    var progress = 0;
+
+    ws.onmessage = function(e) {
+        ws_onmessage_rfplayer_update(e);
+        var data = JSON.parse(e.data);
+        var msgId = data.msgid.split(".");
+        if (msgId[0] == "rfplayer") {
+            if (msgId[1] == "client") {
+                switch (msgId[2]) {
+                    case "updatefirmware" :
+                        if (data.content.error != "") {
+                            new PNotify({
+                                type: 'error',
+                                title: '{% trans %}Refresh RFPLayer dongle{% endtrans %}',
+                                text: data.content.error,
+                                delay: 6000
+                            });
+                            $("#updateProgress").width(data.content.totalprogress + "%").text();
+                            $('#firmware').text($('#firmware').text()+"\n"+data.content.error);
+                            clearInterval(intervalId);
+                            intervalId = null;
+                            $("#dongle-process-running").addClass("hide");
+                        } else {
+                            $("#updateProgress").width(data.content.totalprogress + "%").text(data.content.info);
+                            $('#firmware').text($('#firmware').text()+"\n"+data.content.msg);
+                            progress = data.content.totalprogress;
+                            if (data.content.info == "Checking") {
+                                dTime = (10/((100-progress)/2))*1000;
+                                if (!intervalId) {
+                                    intervalId = setInterval(function(){
+                                            $("#updateProgress").width((progress++)+ "%")
+                                        },
+                                        dTime);
+                                };
+                            } else if (data.content.info == "Reboot") {
+                                    clearInterval(intervalId);
+                                    dTime = (60/(100-progress))*1000;
+                                    intervalId = setInterval(function(){
+                                            $("#updateProgress").width((progress++)+ "%")
+                                        },
+                                        dTime);
+                            };
+                            if (data.content.totalprogress >= 100) {
+                                clearInterval(intervalId);
+                                intervalId = null;
+                                $("#updateProgress").removeClass("progress-bar-striped");
+                                $("#dongle-process-running").addClass("hide");
+                            };
+                        };
+                        break;
+                };
+            };
+        };
+    };
+});
+
+</script>
+
+{% endblock %}

@@ -157,16 +157,14 @@ BAND_SPECIF = { 'Frequency': {'cmd' : {
 class SerialRFP1000(SerialRFPlayer):
     """Base class to handle RFPLAYER on serial port"""
 
-    def __init__(self, log, stop, rfp_device, cb_receive, cb_register_thread, cb_publishMsg,
+    def __init__(self, manager, rfp_device, cd_handle_RFP_Data,
                  baudrate=115200, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE,
                  stopbits=serial.STOPBITS_ONE, timeout=0.1, xonxoff=0, rtscts=1, dsrdtr=None, fake_device=None):
         """ Init An RFP1000 device and start communication.
-            @param log : log instance
-            @param stop : stop Event
+            @param manager : RFPManager instance
             @param rfp_device : rfplayer device (ex : /dev/rfplayer)
-            @param cb_receive : callback when data received.
+            @param cd_handle_RFP_Data : callback when data received.
             *** next parameters are optional and should be changed only by an expert and an informed choice ***
-            @param cb_register_thread : callback register all daemon thread.
             @param baudrate : optional serial port baudrate. Default: 115200 bauds
             @param bytesize : optional serial port bytesize. Default: serial.EIGHTBITS
             @param parity : optional serial port parity. Default: serial.PARITY_NONE
@@ -177,15 +175,15 @@ class SerialRFP1000(SerialRFPlayer):
             @param dsrdtr : optional serial port hardware flow control rtscts. Default: disabled (None)
             @param fake_device : optional fake device. If None, this will not be used. Else, the fake serial device library will be used. Default: None
         """
-        self._sendMessage = cb_receive
+        self._sendMessage = cd_handle_RFP_Data
         self.status = {}
-        SerialRFPlayer.__init__(self, log, stop, rfp_device, self.handle_msg, cb_register_thread, cb_publishMsg,
+        SerialRFPlayer.__init__(self, manager, rfp_device, self.handle_msg,
                                 baudrate, bytesize, parity, stopbits, timeout, xonxoff, rtscts, dsrdtr, fake_device)
 
     @property
     def RFP_Id(self):
         """ Get value returned by HELLO command"""
-        return "ZIA--Welcome to Ziblue Dongle RFPLAYER (RFP1000"
+        return "ZIA--Welcome to Ziblue Dongle "
 
     def open(self):
         """ Open serial com and start communication."""
@@ -217,8 +215,9 @@ class SerialRFP1000(SerialRFPlayer):
         if 'radioStatus' in data :
             self.status['radioStatus'] = data['radioStatus']
 
-    def handle_msg(self, msg):
-        """Handle msq to MQ"""
+    def handle_msg(self, client, msg):
+        """Handle msg to MQ"""
+        print(msg)
         if "radioStatus" in msg :
             self.setStatus(msg)
             return
@@ -226,7 +225,7 @@ class SerialRFP1000(SerialRFPlayer):
             self.setStatus(msg)
             return
         self.log.debug("Sending to 0MQ : {0}".format(msg))
-        self._sendMessage(msg)
+        self._sendMessage(client, msg)
 
     def getInfos(self):
         """Return All informations formated to UI"""
@@ -291,47 +290,3 @@ class SerialRFP1000(SerialRFPlayer):
         else :
             retVal['systemStatus'] = 'Not read'
         return retVal
-
-if __name__ == "__main__":
-    import logging
-    import threading
-    import sys
-
-    FIRMWARE = '../data/FW256K_V112_ZIBLUE_RFPLAYER_RFP1000_FIRMWARE.txt'
-    FIRMWARE = ''   # comment to activate firmware update test after ~10 sec started
-
-    FORMAT = '%(asctime)s %(name)s %(levelname)s %(message)s'
-
-    logging.basicConfig(filename='RFP1000-Test.log', level=logging.DEBUG, format=FORMAT)
-
-    outLog = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter(FORMAT)
-    outLog.setFormatter(formatter)
-    logging.getLogger().addHandler(outLog)
-    logging.getLogger().setLevel(logging.DEBUG)
-    log = logging.getLogger()
-
-    stop = threading.Event()
-
-    print logging
-    print stop
-
-    def fake_registerThread(th):
-        print(u"{0} Registered :)".format(th))
-
-    def fake_MQSending(msg):
-        print(u"****** Message transmit to 0MQ : {0}\n".format(msg))
-
-    RFP = SerialRFP1000(logging, stop, '/dev/rfplayer', fake_MQSending, fake_registerThread)
-    cpt = 0
-    if RFP.open():
-        try :
-            while True :
-                if cpt == 100 and FIRMWARE != "":
-                    RFP.update_firmware(FIRMWARE)
-                time.sleep(0.1)
-                cpt+=1
-        except :
-            stop.set()
-            print(traceback.format_exc())
-            print("********** END ************")

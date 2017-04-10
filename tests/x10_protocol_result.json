@@ -1,0 +1,160 @@
+[{
+        "device_type" : "rfplayer.temperature.lowbattery",
+        "name" : "Test Temperature InfoType 4",
+        "parameters" : [{
+                        "key" : "device",
+                        "value" : "0x0000.1.0"
+                        }
+                       ],
+        "timeout" : 30,
+        "values" : [{
+                    "sensor" : "temperature",
+                    "value" : 19.0,
+                    "type" : "float"
+                    },{
+                    "sensor" : "low_battery",
+                    "value" : 1,
+                    "type" : "bool"
+                    },{
+                    "sensor" : "rf_quality",
+                    "value" : 50,
+                    "type" : "int"
+                    }
+                  ]
+    },{
+        "device_type" : "rfplayer.temperature.hygrometry.lowbattery",
+        "name" : "Test Temperature/hydro InfoType 4",
+        "parameters" : [{
+                        "key" : "device",
+                        "value" : "0xFA28.233.2"
+                        }
+                       ],
+        "timeout" : 30,
+        "values" : [{
+                    "sensor" : "temperature",
+                    "value" : 23.1,
+                    "type" : "float"
+                    },{
+                    "sensor" : "hygrometry",
+                    "value" : 81,
+                    "type" : "int"
+                    },{
+                    "sensor" : "low_battery",
+                    "value" : 0,
+                    "type" : "bool"
+                    },{
+                    "sensor" : "rf_quality",
+                    "value" : 100,
+                    "type" : "int"
+                    }
+                  ]
+    },{
+        "device_type" : "rfplayer.temperature.hygrometry.pressure.lowbattery",
+        "name" : "Test Temperature/hydro/pressure InfoType 5",
+        "parameters" : [{
+                        "key" : "device",
+                        "value" : "0x5A6D.96.4"
+                        }
+                       ],
+        "timeout" : 30,
+        "values" : [{
+                    "sensor" : "temperature",
+                    "value" : 21.5,
+                    "type" : "float"
+                    },{
+                    "sensor" : "hygrometry",
+                    "value" : 75,
+                    "type" : "int"
+                    },{
+                    "sensor" : "pressure",
+                    "value" : 1016,
+                    "type" : "int"
+                    },{
+                    "sensor" : "low_battery",
+                    "value" : 1,
+                    "type" : "bool"
+                    },{
+                    "sensor" : "rf_quality",
+                    "value" : 70,
+                    "type" : "int"
+                    }
+                  ]
+    },{
+        "device_type" : "rfplayer.wind_speed.direction.lowbattery",
+        "name" : "Test Wind sensors InfoType 6",
+        "parameters" : [{
+                        "key" : "device",
+                        "value" : "0x1A89.157.0"
+                        }
+                       ],
+        "timeout" : 30,
+        "values" : [{
+                    "sensor" : "wind_speed",
+                    "value" : 0.4,
+                    "type" : "float"
+                    },{
+                    "sensor" : "direction",
+                    "value" : 225,
+                    "type" : "int"
+                    },{
+                    "sensor" : "low_battery",
+                    "value" : 0,
+                    "type" : "bool"
+                    },{
+                    "sensor" : "rf_quality",
+                    "value" : 60,
+                    "type" : "int"
+                    }
+                  ]
+    },{
+        "device_type" : "rfplayer.uv.lowbattery",
+        "name" : "Test UV InfoType 7",
+        "parameters" : [{
+                        "key" : "device",
+                        "value" : "0xDA78.8.6"
+                        }
+                       ],
+        "timeout" : 30,
+        "values" : [{
+                    "sensor" : "uv",
+                    "value" : 5,
+                    "type" : "float"
+                    },{
+                    "sensor" : "low_battery",
+                    "value" : 0,
+                    "type" : "bool"
+                    },{
+                    "sensor" : "rf_quality",
+                    "value" : 60,
+                    "type" : "int"
+                    }
+                  ]
+    },{
+        "device_type" : "rfplayer.total_rain.rain.lowbattery",
+        "name" : "Test Rain sensors InfoType 9",
+        "parameters" : [{
+                        "key" : "device",
+                        "value" : "0x2A19.153.0"
+                        }
+                       ],
+        "timeout" : 30,
+        "values" : [{
+                    "sensor" : "total_rain",
+                    "value" : 1040.1,
+                    "type" : "float"
+                    },{
+                    "sensor" : "rain",
+                    "value" : 8.05,
+                    "type" : "float"
+                    },{
+                    "sensor" : "low_battery",
+                    "value" : 0,
+                    "type" : "bool"
+                    },{
+                    "sensor" : "rf_quality",
+                    "value" : 50,
+                    "type" : "int"
+                    }
+                  ]
+    }
+]

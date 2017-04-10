@@ -1,0 +1,80 @@
+{
+    "history" : [],
+    "responses" : [
+                    { "description" : "Identification data for <ZIA++HELLO\r> response of RFP1000 Dongle",
+                       "type" : "data",
+                       "when": "ZIA++HELLO\r",
+                        "do":[{
+                            "type" : "data",
+                            "data" : "ZIA--Welcome to Ziblue Dongle RFPLAYER (RFP1000, Firmware V1.12 Mac FromTestDevice)!\r",
+                            "delay":1
+                            }
+                        ]
+                    },
+                    { "description" : "Response data for <STATUS JSON> with request num = 1",
+                       "type" : "data",
+                       "when": "ZIA++1 STATUS JSON\r",
+                        "do":[{
+                            "type" : "data",
+                            "data" : "ZIA--{'systemStatus': {'reqNum': '1', 'info': [{'n' : 'Version', 'v' : '1.12', 'unit' : '', 'c' : ''}, {'n' : 'Time', 'v' : '4504517', 'unit' : 's', 'c' : ''}, {'n' : 'Mac', 'v' : '0xF6C09FDD', 'unit' : '', 'c' : ''}, {'n' : 'LBT', 'v' : '16', 'unit' : 'dBm', 'c' : ''}, {'n' : 'Factory', 'v' : '1400000031', 'unit' : '', 'c' : ''}, {'n' : 'ClusterID', 'v' : '0', 'unit' : '', 'c' : ''}, {'n' : 'RTdenials', 'v' : '0', 'unit' : '', 'c' : ''}, {'transmitter': {'available': { 'p': ['VISONIC433', 'VISONIC868', 'CHACON', 'DOMIA', 'X10', 'X2D433', 'X2D868', 'X2DSHUTTER', 'X2DELEC', 'X2DGAS', 'RTS', 'BLYSS', 'PARROT', 'KD101']}}}, {'receiver': {'available': { 'p': ['X10', 'RTS', 'VISONIC', 'BLYSS', 'CHACON', 'OREGONV1', 'OREGONV2', 'OREGONV3/OWL', 'DOMIA', 'X2D', 'KD101', 'PARROT']}}}, {'receiver': {'enabled': { 'p': ['X10', 'RTS', 'VISONIC', 'BLYSS', 'CHACON', 'OREGONV1', 'OREGONV2', 'OREGONV3/OWL', 'DOMIA', 'X2D', 'KD101', 'PARROT']}}}, {'repeater': {'available': { 'p': ['X10', 'RTS', 'VISONIC', 'BLYSS', 'CHACON', 'OREGONV1', 'OREGONV2', 'OREGONV3/OWL', 'DOMIA', 'X2D', 'KD101', 'PARROT']}}}, {'repeater': {'enabled': { 'p': ['X10', 'RTS', 'VISONIC', 'BLYSS', 'CHACON', 'OREGONV1', 'OREGONV2', 'OREGONV3/OWL', 'DOMIA', 'X2D', 'KD101', 'PARROT']}}}]}}\r",
+                            "delay":1
+                            },{
+                            "type" : "data",
+                            "data" : "ZIA--{'radioStatus': {'reqNum': '1', 'band': [{'i': [{'n' : 'Frequency', 'v' : '433920', 'unit' : 'Khz', 'c' : ' Most 433Mhz devices'}, {'n' : 'Selectivity', 'v' : '0', 'unit' : '', 'c' : ' Default value'}, {'n' : 'FloorNoise', 'v' : '-102', 'unit' : 'dBm', 'c' : ' Very small noise'}, {'n' : 'DspTrigger', 'v' : '8', 'unit' : 'dBm', 'c' : ''}, {'n' : 'RFlink', 'v' : '1', 'unit' : '', 'c' : ' Enabled'}, {'n' : 'RFlinkTrigger', 'v' : '12', 'unit' : 'dBm', 'c' : ''}, {'n' : 'sentFrames', 'v' : '32', 'unit' : '', 'c' : ''}, {'n' : 'discFrames', 'v' : '0', 'unit' : '', 'c' : ''}, {'n' : 'dutyCycle', 'v' : '360000', 'unit' : 'ms/h', 'c' : ' by ETSI'}, {'n' : 'remainDC', 'v' : '360000', 'unit' : 'ms', 'c' : ''}]}, {'i': [{'n' : 'Frequency', 'v' : '868950', 'unit' : 'Khz', 'c' : '  Visonic'}, {'n' : 'Selectivity', 'v' : '0', 'unit' : '', 'c' : ' Default value'}, {'n' : 'FloorNoise', 'v' : '-106', 'unit' : 'dBm', 'c' : ' Very small noise'}, {'n' : 'DspTrigger', 'v' : '6', 'unit' : 'dBm', 'c' : ''}, {'n' : 'RFlink', 'v' : '1', 'unit' : '', 'c' : ' Enabled'}, {'n' : 'RFlinkTrigger', 'v' : '10', 'unit' : 'dBm', 'c' : ''}, {'n' : 'sentFrames', 'v' : '0', 'unit' : '', 'c' : ''}, {'n' : 'discFrames', 'v' : '0', 'unit' : '', 'c' : ''}, {'n' : 'dutyCycle', 'v' : '3600', 'unit' : 'ms/h', 'c' : ' by ETSI'}, {'n' : 'remainDC', 'v' : '3600', 'unit' : 'ms', 'c' : ''}]}]}}\r",
+                            "delay":0
+                            }
+                        ]
+                    },
+                    { "description" : "Identification data for <ZIA++HELLO\r> response of RFP1000 Dongle",
+                       "type" : "data",
+                       "when": "ZIA++PING\r",
+                        "do":[{
+                            "type" : "data",
+                            "data" : "PONG\r",
+                            "delay":0
+                            }
+                        ]
+                    }
+                ],
+    "loop" : [
+                    { "description" : "wait",
+                      "action" : "wait",
+                      "delay" : 2
+                    },
+                    {"description" :"Test infotype 4 Temperature",
+                      "action": "data",
+                      "data" : "ZIA33{'frame' :{'header': {'frameType': '0', 'cluster': '0', 'dataFlag': '0', 'rfLevel': '-76', 'floorNoise': '-102', 'rfQuality': '5','protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': '4', 'frequency': '433920'},'infos': {'subType': '0', 'id_PHY': '0x0000', 'id_PHYMeaning': 'ProbeV1','adr_channel': '256',  'adr': '1',  'channel': '0',  'qualifier': '17','lowBatt': '1','measures' : [{'type' : 'temperature', 'value' : '+19.0', 'unit' : 'Celsius'},{'type' : 'hygrometry', 'value' : '0', 'unit' : '%'}]}}}",
+                      "delay": 2
+                    },
+                    {"description" :"Test infotype 4 Temp/Hydro",
+                      "action": "data",
+                      "data" : "ZIA33{'frame' :{'header': {'frameType': '0', 'cluster': '0', 'dataFlag': '0', 'rfLevel': '-73', 'floorNoise': '-98', 'rfQuality': '10','protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': '4', 'frequency': '433920'},'infos': {'subType': '0', 'id_PHY': '0xFA28', 'id_PHYMeaning': 'THGR810','adr_channel': '59650',  'adr': '233',  'channel': '2',  'qualifier': '17','lowBatt': '0', 'measures' : [{'type' : 'temperature', 'value' : '+23.1', 'unit' : 'Celsius'}, {'type' : 'hygrometry', 'value' : '81', 'unit' : '%'}]}}}",
+                      "delay": 2
+                    },
+                    {"description" :"Test infotype 5 Temp/Hydro/Pressure",
+                      "action": "data",
+                      "data" : "ZIA33{'frame' :{'header': {'frameType': '0', 'cluster': '0', 'dataFlag': '0', 'rfLevel': '-68', 'floorNoise': '-96', 'rfQuality': '7','protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': 5', 'frequency': '433920'},'infos': {'subType': '0', 'id_PHY': '0x5A6D', 'id_PHYMeaning': 'THGR918N','adr_channel': '24580',  'adr': '96',  'channel': '4',  'qualifier': '17','lowBatt': '1', 'measures' : [{'type' : 'temperature', 'value' : '+21.5', 'unit' : 'Celsius'}, {'type' : 'hygrometry', 'value' : '75', 'unit' : '%'}, {'type' : 'pressure', 'value' : '1016', 'unit' : 'hPa'}]}}}",
+                      "delay": 2
+                    },
+                    { "description" : "wait",
+                      "action" : "wait",
+                      "delay" : 2
+                    },
+                    {"description" :"Test infotype 6 Wind sensors",
+                      "action": "data",
+                      "data" : "ZIA33{'frame' :{'header': {'frameType': '0', 'dataFlag': '0', 'rfLevel': '-64', 'floorNoise': '-97', 'rfQuality': '6', 'protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': '6', 'frequency': '433920'}, 'infos': {'subType': '0', 'id_PHY': '0x1A89', 'id_PHYMeaning': 'WGR800', 'adr_channel': '40192',  'adr': '157', 'channel': '0',  'qualifier': '48',  'lowBatt': '0', 'measures' : [{'type' : 'wind speed', 'value' : '0.4', 'unit' : 'm/s'}, {'type' : 'direction', 'value' : '225', 'unit' : 'degree'}]}}}",
+                      "delay": 2
+                    },
+                    {"description" :"Test infotype 7 UV",
+                      "action": "data",
+                      "data" : "ZIA33{'frame' :{'header': {'frameType': '0', 'cluster': '0', 'dataFlag': '0', 'rfLevel': '-84', 'floorNoise': '-113', 'rfQuality': '2','protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': '4', 'frequency': '433920'},'infos': {'subType': '0', 'id_PHY': '0xDA78', 'id_PHYMeaning': 'UVN800','adr_channel': '2054',  'adr': '8',  'channel': '6',  'qualifier': '17','lowBatt': '0','measures' : [{'type' : 'UV', 'value' : '5', 'unit' : '1/10 index'}]}}}",
+                      "delay": 2
+                    },
+                    {"description" :"Test infotype 9 Rain sensor",
+                      "action": "data",
+                      "data" : "ZIA33{ 'frame' :{'header': {'frameType': '0', 'dataFlag': '0', 'rfLevel': '-71', 'floorNoise': '-98', 'rfQuality': '5', 'protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': '9', 'frequency': '433920'}, 'infos': {'subType': '0', 'id_PHY': '0x2A19', 'id_PHYMeaning': 'PCR800', 'adr_channel': '39168',  'adr': '153', 'channel': '0',  'qualifier': '48',  'lowBatt': '0', 'measures' : [{'type' : 'total rain', 'value' : '1040.1', 'unit' : 'mm'}, {'type' : 'current rain', 'value' : '8.05', 'unit' : 'mm/h'}]}}}",
+                      "delay": 2
+                    }
+              ]
+}
+

@@ -1,0 +1,120 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.marge {
+    margin-left: 3em;
+}
+
+/* bootstrap glyphicons extend */
+
+.row-spacing {
+    margin-bottom: 10px;
+}
+
+.btnspacing, .extbtn {
+    margin: 1px;
+}
+
+.extbtn {
+    padding:  1px 3px;
+    line-height: 1;
+}
+
+.input-addon-xs {
+    height: 30px;
+    padding: 1px 1px;
+    font-size: 12px;
+    line-height:1.5;
+    border-radius: 3px;
+}
+
+.badge-error {
+  background-color: #b94a48 !important;
+}
+
+.badge-warning {
+    background-color: #f89406 !important;
+}
+
+.badge-success {
+  background-color: #468847 !important;
+}
+
+.badge-info {
+  background-color: #3a87ad !important;
+}
+
+.pull-bottom {
+    display: inline-block;
+    float: none;
+    position: relative;
+    bottom: 0px;
+}
+
+.pull-top {
+    display: inline-block;
+    float: none;
+    position: relative;
+    top: 0px;
+}
+
+.popover-content {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.popover {
+    max-width: 600px;
+}
+
+.popover-title .close{
+    position: absolute;
+    top: 0px;
+    right: 5px;
+}
+
+.tooltip-inner {
+  color: #000;
+  background: #FAFAFA;
+  border: solid 1px #000;
+}
+
+.exclusive-process {
+  position: absolute;
+  left: 30%;
+  top: 20%;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  cursor: wait;
+}
+
+/* Datattable Header cells cmdclss  */
+.headcmdclss {
+    text-align: center !important;
+    background: #6CC8C8 !important;
+}
+
+.icon-unknown {
+  color : #8C8C8C;
+}
+
+.icon-info {
+  color : #5BC0DE;
+}
+
+.icon-info2 {
+  color : #0404B4;
+}
+
+.icon-success {
+  color : #26CB34;
+}
+
+.icon-warning {
+  color : #FFAE00;
+}
+
+.icon-danger {
+  color : #FF0000;
+}

@@ -39,215 +39,30 @@ Implements
 @license: GPL(v3)
 @organization: Domogik
 """
+RFP_CLIENTS_DEVICES = ["rfplayer.rfp1000"]
 
-# Header definition
-SYNCHEADER = ["Z", "I"]
-SOURCEDESTQUALIFIER = ["A", "O"] # Data form ASCII or BINARY
-SOURCEDEST = 1
-QUALIFIER_COMMANQ = "++"
-QUALIFIER_RECEPT = "--"
-QUALIFIER_XML = "22"
-QUALIFIER_JSON = "33"
-QUALIFIER_TEXT = "44"
-TERMINATOR = "\r"
+class RFPlayerException(Exception):
+    """
+    RFPlayer exception
+    """
+    def __init__(self, value):
+        Exception.__init__(self)
+        self.value = u"RFPlayer exception: {0}".format(value)
 
-# data format
-XMLDATA = "XML"
-JSONDATA = "JSON"
-TEXTDATA = "TEXT"
+    def __str__(self):
+        return repr(self.value)
 
-# Protocoles Ids
-X10 = "X10"
-RTS = "RTS"
-VISONIC = "VISONIC"
-BLYSS = "BLYSS"
-CHACON = "CHACON"
-OREGONV1 = "OREGONV1"
-OREGONV2 = "OREGONV2"
-OREGONV3_OWL = "OREGONV3/OWL"
-DOMIA = "DOMIA"
-X2D = "X2D"
-KD101 = "KD101"
-PARROT = "PARROT"
+def getRFPId(device):
+    """ Return key RFPLayer id for rfplClients list."""
+    if device.has_key('name') and device.has_key('id'):
+        return "{0}.{1}".format(device['name'], device['id'])
+    else : return None
 
-COMMANDS = {"HELLO": {},
-            "STATUS":{
-                    0: ["", "SYSTEM", "RADIO", "TRANSCODER", "PARROT"],
-                    1: ["", "TEXT", "XML", "JSON"]
-                    },
-            "FREQ" : {
-                "H":["0", "868950", "868350"],
-                "L":["0", "433420", "433920"]
-                },
-            "SELECTIVITY":{
-                "H":["0", "1", "2", "3", "4", "5"],
-                "L":["0", "1", "2", "3", "4", "5"]
-                },
-            "SENSITIVITY":{
-                "H":["0", "1", "2", "3", "4"],
-                "L":["0", "1", "2", "3", "4"]
-                },
-            "DSPTRIGGER":{
-                "H":[str(x) for x in range(4,21)],
-                "L":[str(x) for x in range(4,21)]
-                },
-            "RFLINKTRIGGER":{
-                "H":[str(x) for x in range(4,21)],
-                "L":[str(x) for x in range(4,21)]
-                },
-            "LBT":[str(x) for x in range(0,31)],
-            "SETMAC": {},
-            "FACTORYRESET": ["","ALL"],
-            "FORMAT": ["OFF", "BINARY", "HEXA", "HEXA FIXED", TEXTDATA, XMLDATA, JSONDATA, "RFLINK OFF", "RFLINK BINARY"],
-            "RECEIVER": ["*", X10, RTS, VISONIC, BLYSS, CHACON, OREGONV1, OREGONV2, OREGONV3_OWL, DOMIA, X2D, KD101, PARROT],
-            "REPEATER": ["*", X10, RTS, VISONIC, BLYSS, CHACON, OREGONV1, OREGONV2, OREGONV3_OWL, DOMIA, X2D, KD101, "ON", "OFF"],
-            "LEDACTIVITY": ["0", "1"],
-            "PARROTLEARN": ["", "ON", "OFF"],
-            "REMAPPING": {
-                0: "PARROT",
-                1: ["ONOFF", "CLEAR"]
-                },
-            "TRANSCODER": {
-                0: ["", "ENTRY"],
-                1: ["TO", "CLEAR"]
-                }
-            }
-
-INFOTYPE = {
-    0:{
-        "protocoles": [X10, DOMIA, PARROT],
-        "decription": "Used by X10 / DOMIA LITE protocol / PARROT",
-        "parameters" :[
-            "subType",
-            "id"
-            ]
-    },
-    1:{
-        "protocoles": [X10, CHACON, KD101, BLYSS],
-        "decription": "Used by X10 (24/32 bits ID), CHACON , KD101, BLYSS",
-        "parameters" :[
-            "subType",
-            "id_lsb",
-            "id_msb"
-            ]
-    },
-    2:{
-        "protocoles": [VISONIC],
-        "decription": "Used by VISONIC",
-        "parameters" :[
-            "subType",
-            "id_lsb",
-            "id_msb",
-            "qualifier"
-            ]
-    },
-    3:{
-        "protocoles": [RTS],
-        "decription": "Used by RTS protocol",
-        "parameters" :[
-            "subType",
-            "id_lsb",
-            "id_msb",
-            "qualifier"
-            ]
-    },
-    4:{
-        "protocoles": [OREGONV1, OREGONV2, OREGONV3_OWL],
-        "decription": "Thermo/Hygro sensors",
-        "parameters" :[
-            "subType",
-            "id_PHY",
-            "adr_channel",
-            "qualifier",
-            "temp",
-            "hydro"
-            ]
-    },
-    5:{
-        "protocoles": [OREGONV1, OREGONV2, OREGONV3_OWL],
-        "decription": "Atmospheric pressure sensors",
-        "parameters" :[
-            "subType",
-            "id_PHY",
-            "adr_channel",
-            "qualifier",
-            "temp",
-            "pressure",
-            "hydro"
-            ]
-    },
-    6:{
-        "protocoles": [OREGONV1, OREGONV2, OREGONV3_OWL],
-        "decription": "Wind sensors",
-        "parameters" :[
-            "subType",
-            "id_PHY",
-            "adr_channel",
-            "qualifier",
-            "speed",
-            "direction"
-            ]
-    },
-    7:{
-        "protocoles": [OREGONV1, OREGONV2, OREGONV3_OWL],
-        "decription": "UV sensors",
-        "parameters" :[
-            "subType",
-            "id_PHY",
-            "adr_channel",
-            "UV"
-            ]
-    },
-    8:{
-        "protocoles": [OREGONV3_OWL],
-        "decription": "Energy/power sensors",
-        "parameters" :[
-            "subType",
-            "id_PHY",
-            "adr_channel",
-            "qualifier",
-            "Energy_lsb",
-            "Energy_msb",
-            "Power",
-            "P1",
-            "P2",
-            "P3"
-            ]
-    },
-    9:{
-        "protocoles": [OREGONV1, OREGONV2, OREGONV3_OWL],
-        "decription": "Rain sensors",
-        "parameters" :[
-            "subType",
-            "id_PHY",
-            "adr_channel",
-            "TotalRain_lsb",
-            "TotalRain_msb",
-            "Rain"
-            ]
-    },
-    10:{
-        "protocoles": [X2D],
-        "decription": "Thermostats",
-        "parameters" :[
-            "subType",
-            "id_lsb",
-            "id_msb",
-            "qualifier",
-            "Function",
-            "State"
-            ]
-    },
-    11:{
-        "protocoles": [X2D],
-        "decription": "Alarm",
-        "parameters" :[
-            "subType",
-            "id_lsb",
-            "id_msb",
-            "qualifier"
-            ]
-    }
-}
-
-print INFOTYPE
+def checkIfConfigured(deviceType,  device):
+    """ Check if device_type have his all paramerter configured.
+        Methode must be update for all existing RFPLayer device_type in json
+    """
+    if deviceType in RFP_CLIENTS_DEVICES :
+        if device["parameters"]["device"]["value"] !="" : return True
+        else : return False
+    return False

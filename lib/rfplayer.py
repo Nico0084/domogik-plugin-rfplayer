@@ -1,30 +1,53 @@
 # !/usr/bin/python
 #-*- coding: utf-8 -*-
 
+""" This file is part of B{Domogik} project (U{http://www.domogik.org}).
+
+License
+=======
+
+B{Domogik} is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+B{Domogik} is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Domogik. If not, see U{http://www.gnu.org/licenses}.
+
+Plugin purpose
+==============
+
+The dongle RFPLAYER RFP1000 is a new generation Radio Frequency device. The RFP1000 looks like a USB
+key with 2 independent Radio Frequency transceivers 433 Mhz and 868 Mhz dedicated to a Home Automation
+usage.
+
+Implements
+==========
+
+- RF 433 Mhz and 868 Mhz
+- bidirectional radio GATEWAY
+- REPEATER
+- protocols VISONIC, CHACON/DIO, DOMIA, X10, DELTADORE, SOMFY, BLYSS (433Mhz), KD101, PARROT, Scientific Oregon, OWL
+
+@author: Nico <nico84dev@gmail.com>
+@copyright: (C) 2007-2016 Domogik project
+@license: GPL(v3)
+@organization: Domogik
+"""
+
 import traceback
 import threading
+import time
 
 from domogik_packages.plugin_rfplayer.lib.infotypes import *
+from domogik_packages.plugin_rfplayer.lib.defs import *
+from domogik_packages.plugin_rfplayer.lib.monitor_rfplayer import ManageMonitorClient
 from domogik_packages.plugin_rfplayer.lib.rfp1000 import SerialRFP1000
-
-RFP_CLIENTS_DEVICES = ["rfplayer.rfp1000"]
-
-class RFPlayerException(Exception):
-    """
-    RFPlayer exception
-    """
-    def __init__(self, value):
-        Exception.__init__(self)
-        self.value = u"RFPlayer exception" + value
-
-    def __str__(self):
-        return repr(self.value)
-
-def getRFPId(device):
-    """ Return key RFPLayer id for rfplClients list."""
-    if device.has_key('name') and device.has_key('id'):
-        return "{0}.{1}".format(device['name'], device['id'])
-    else : return None
 
 def checkIfConfigured(deviceType,  device):
     """ Check if device_type have his all paramerter configured.
@@ -45,6 +68,8 @@ class RFPManager(object):
         self._send_sensor = cb_send_sensor
         self._stop = plugin.get_stop()  # TODO : pas forcement util ?
         self.rfpClients = {} # list of all RFPlayer
+        self.monitorClients = ManageMonitorClient(self)
+        self.monitorClients.start()  # Start supervising nodes activity to helper log.
         self._plugin.publishMsg('rfplayer.manager.state', self.getManagerInfo())
         # get the devices list
         self.refreshDevices(self._plugin.get_device_list(quit_if_no_device = False, max_attempt = 2))
@@ -58,11 +83,12 @@ class RFPManager(object):
 
     @property
     def stop(self):
-        return self._plugin.get_stop(),
+        return self._plugin.get_stop()
 
     def _del__(self):
         """Delete all RFPLayer CLients"""
         print u"try __del__ rfpClients"
+        self.monitorNodes.stop()
         for id in self.rfpClients : self.rfpClients[id] = None
 
     def closeClients(self):
@@ -83,9 +109,8 @@ class RFPManager(object):
             else:
                 if checkIfConfigured(dmgDevice["device_type_id"], dmgDevice ) :
                     if dmgDevice["device_type_id"] == "rfplayer.rfp1000" :
-                        self.rfpClients[clID] = SerialRFP1000(self.log, self._plugin.get_stop(),
-                                                              self._plugin.get_parameter(dmgDevice, 'device'),
-                                                              self._handle_RFP_Data, self._plugin.register_thread, self.publishRFPlayerMsg)
+                        self.rfpClients[clID] = SerialRFP1000(self, self._plugin.get_parameter(dmgDevice, 'device'), self._handle_RFP_Data,
+                                                              fake_device = self._plugin.options.test_option)
                     else :
                         self.log.error(u"Manager RFPLayer : RFPLayer Client type {0} not exist, not added.".format(clID))
                         return False
@@ -142,7 +167,7 @@ class RFPManager(object):
                 retval = [findId]
                 self.log.debug (u"key id type find")
             else :
-                self.log.debug (u"No key id type, search {0} in devices {1}".format(findId, self.rfpClients.keys()))
+                self.log.debug (u"No key id type, search {0} in client {1}".format(findId, self.rfpClients.keys()))
                 for id in self.rfpClients.keys() :
                     self.log.debug(u"Search in list by device key : {0}".format(self.rfpClients[id].domogikDevice))
                     if self.rfpClients[id].domogikDevice == findId :
@@ -270,7 +295,7 @@ class RFPManager(object):
                     "xpl_stats" : {}
                 })
 
-    def _handle_RFP_Data(self, data):
+    def _handle_RFP_Data(self, client, data):
         """Handle RFP data to domogik sensor """
         if type(data) == dict and 'frame' in data :
             iType = getInfoType(data['frame'])
@@ -288,6 +313,9 @@ class RFPManager(object):
                                     self.log.warning(u"Domogik device {0} not according to info type {1}, sensor not find.\n data : {2}\n device :".format(dmgdev['name'], iType.infoType, data, dmgdev))
                     else :
                         self.liklyDmgDevices(iType)
+                        cIds = self.getIdsClient(client)
+                        for cId in cIds :
+                            self.monitorClients.noDmgDevice_report(cId, time.time(),  iType)
                 else :
                     self.log.warning(u"Inconsistent RFP protocol ({0}) for info type {1}. data : {2}".format(data['header']['protocol'], iType.infoType, data))
             else :
@@ -312,13 +340,19 @@ class RFPManager(object):
             if reqRef[1] == 'getstatus' :
                 report = self.getManagerInfo()
         if reqRef[0] == 'client' :
-            if reqRef[1] == 'getinfos' :
-                if 'rfplayerID' in data :
-                    client = self.getClient(data['rfplayerID'])
-                    if client is not None :
+            if 'rfplayerID' in data :
+                client = self.getClient(data['rfplayerID'])
+                if client is not None :
+                    if reqRef[1] == 'getinfos' :
                         report = client.getInfos()
-                    else : report['error'] = u"<{0}>, Unknown RFPlayer dongle, data : {1}".format(request, data)
-                else : report['error'] = u"<{0}>, Invalid data format : {1}".format(request, data)
+                    elif reqRef[1] == 'updatefirmware' :
+                        report = client.RebuildFirmware(data)
+                    elif reqRef[1] == 'startmonitorclient':
+                        report = self.monitorClients.startMonitorClient(data["rfplayerID"])
+                    elif reqRef[1] == 'stopmonitorclient':
+                        report = self.monitorClients.stopMonitorClient(data["rfplayerID"])
+                else : report['error'] = u"<{0}>, Unknown RFPlayer dongle, data : {1}".format(request, data)
+            else : report['error'] = u"<{0}>, Invalid data format : {1}".format(request, data)
         return report
 
     def getManagerInfo(self):
@@ -331,19 +365,24 @@ class RFPManager(object):
             info['rfplayerID'] = cId
             info['name'] = self.rfpClients[cId].domogikDevice
             info['dmgDevices'] = self._plugin.getDmgDevices(self.rfpClients[cId].domogikDevice)
+            info['monitored'] = self.monitorClients.getFileName(cId) if self.monitorClients.isMonitored(cId) else ''
             report['rfPlayers'].append(info)
         report['error'] = ''
         return report
 
-    def publishRFPlayerMsg(self, rfPLayer):
-        """Report a message from a RFPLayer"""
+    def publishRFPlayerMsg(self, rfPLayer, category='rfplayer.client.state', data={}):
+        """Report a message from a RFPLayer, default is status of RFPlayer"""
         cIds = self.getIdsClient(rfPLayer)
         for cId in cIds :
-            info = rfPLayer.getInfos()
+            if category == 'rfplayer.client.state':
+                info = rfPLayer.getInfos()
+                info['name'] = self.rfpClients[cId].domogikDevice
+                info['dmgDevices'] = self._plugin.getDmgDevices(self.rfpClients[cId].domogikDevice)
+                info['monitored'] = self.monitorClients.getFileName(cId) if self.monitorClients.isMonitored(cId) else ''
+            else : info = {}
             info['rfplayerID'] = cId
-            info['name'] = self.rfpClients[cId].domogikDevice
-            info['dmgDevices'] = self._plugin.getDmgDevices(self.rfpClients[cId].domogikDevice)
-            self._plugin.publishMsg('rfplayer.client.state', info)
+            info.update(data)
+            self._plugin.publishMsg(category, info)
 
 class Timer():
     """

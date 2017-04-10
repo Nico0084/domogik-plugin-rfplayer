@@ -166,17 +166,17 @@ class InfoType2(InfoType) :
             if self.data['infos']['subType'] == "0" : # detector/sensor/ PowerCode device
                # D0 : Tamper Flag, D1: Alarm Flag, D2: Low Batt Flag
                 if sensor['data_type'] == 'DT_OpenClose' :
-                    return "1" if qualifier & 1 else "0"
+                    return 1 if qualifier & 1 else 0
                 elif sensor['reference'] == 'alarm' :
-                    return "1" if qualifier & 2 else "0"
+                    return 1 if qualifier & 2 else 0
                 elif sensor['reference'] == 'low_battery' :
-                    return "1" if qualifier & 4 else "0"
-            elif self.data['infos']['subType'] == "1" : # remote control device (MCT-234 style)
+                    return 1 if qualifier & 4 else 0
+            elif self.data['infos']['subType'] == 1 : # remote control device (MCT-234 style)
                 # 5 : Left button 6 : Right button
-                if sensor['reference'] == 'button_1' and (qualifier and 0x08): return "1"
-                elif sensor['reference'] == 'button_2' and (qualifier and 0x10) : return "1"
-                elif sensor['reference'] == 'button_3' and (qualifier and 0x20) : return "1"
-                elif sensor['reference'] == 'button_3' and (qualifier and 0x40) : return "1"
+                if sensor['reference'] == 'button_1' and (qualifier and 0x08): return 1
+                elif sensor['reference'] == 'button_2' and (qualifier and 0x10) : return 1
+                elif sensor['reference'] == 'button_3' and (qualifier and 0x20) : return 1
+                elif sensor['reference'] == 'button_3' and (qualifier and 0x40) : return 1
         except :
             pass
         return None
@@ -212,15 +212,15 @@ class InfoType3(InfoType0) :
             if self.data['infos']['subType'] == "0" : # Shutter device
                # 1 : Down /OFF, 4 : My, 7 : Up / ON, 13 : ASSOC
                 if sensor['reference'] == 'shutter' :
-                    if qualifier == 1 : return "1"
-                    if qualifier == 7 : return "0"
+                    if qualifier == 1 : return 1
+                    if qualifier == 7 : return 0
                 if sensor['reference'] == 'push_button' :
-                    if qualifier == 4 : return "1"
+                    if qualifier == 4 : return 1
                 elif qualifier == 13 : pass # TODO: Handling ASSOCIATION command on RTS Protocol?
             elif self.data['infos']['subType'] == "1" : # portals Remote control
                 # 5 : Left button 6 : Right button
-                if sensor['reference'] == 'button_1' and (qualifier == 5) : return "1"
-                elif sensor['reference'] == 'button_2' and (qualifier == 6) : return "1"
+                if sensor['reference'] == 'button_1' and (qualifier == 5) : return 1
+                elif sensor['reference'] == 'button_2' and (qualifier == 6) : return 1
         except :
             pass
         return None
@@ -306,7 +306,7 @@ class InfoType5(InfoType4) :
                         # convert hPa to Pa for DT_Pressure
                         return int(mes['value']) * 100
             if sensor['reference'] == "low_battery" :
-                return self.data['infos']['lowBatt']
+                return int(self.data['infos']['lowBatt'])
             elif sensor['reference'] == "rf_quality" :
                 return int(self.data['header']['rfQuality']) * 10
         except :
@@ -336,7 +336,7 @@ class InfoType6(InfoType4) :
                     elif sensor['data_type'] == "DT_Angle" and mes['unit'] == 'degree':
                         return int(mes['value'])
             if sensor['reference'] == "low_battery" :
-                return self.data['infos']['lowBatt']
+                return int(self.data['infos']['lowBatt'])
             elif sensor['reference'] == "rf_quality" :
                 return int(self.data['header']['rfQuality']) * 10
         except :
@@ -364,7 +364,7 @@ class InfoType7(InfoType4) :
                     if sensor['data_type'] == "DT_Number" and mes['unit'] == '':
                         return int(mes['value'])
             if sensor['reference'] == "low_battery" :
-                return self.data['infos']['lowBatt']
+                return int(self.data['infos']['lowBatt'])
             elif sensor['reference'] == "rf_quality" :
                 return int(self.data['header']['rfQuality']) * 10
         except :
@@ -405,7 +405,7 @@ class InfoType8(InfoType) :
                     elif sensor['data_type'] == "DT_Power" and mes['unit'] == 'W': # power, P1, P2, P3
                         return int(mes['value'])
             if sensor['reference'] == "low_battery" :
-                return self.data['infos']['lowBatt']
+                return int(self.data['infos']['lowBatt'])
             elif sensor['reference'] == "rf_quality" :
                 return int(self.data['header']['rfQuality']) * 10
         except :
@@ -434,7 +434,7 @@ class InfoType9(InfoType4) :
                     elif sensor['data_type'] == "DT_mMeterHour" and mes['unit'] == 'mm/h':
                         return float(mes['value'])
             if sensor['reference'] == "low_battery" :
-                return self.data['infos']['lowBatt']
+                return int(self.data['infos']['lowBatt'])
             elif sensor['reference'] == "rf_quality" :
                 return int(self.data['header']['rfQuality']) * 10
         except :

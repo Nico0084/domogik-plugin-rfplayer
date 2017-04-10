@@ -1,0 +1,491 @@
+{% block content %}
+
+<!-- rfplayer lib
+    <script type="text/javascript" charset="utf8" src="/plugin_rfplayer/static/js/ozwlib.js"></script>  -->
+    <link rel="stylesheet" type="text/css" href="/plugin_rfplayer/static/css/rfplayer.css">
+
+<!-- Sidebar CSS -->
+    <link rel="stylesheet" type="text/css" href="/plugin_rfplayer/static/css/bootstrap-sidebar.css">
+
+<!-- Bootbox
+    <script type="text/javascript" charset="utf8" src="/plugin_rfplayer/static/libraries/js/bootbox.min.js"></script>
+-->
+<!-- Bootstrap switch
+    <link rel="stylesheet" type="text/css" href="/plugin_rfplayer/static/libraries/css/bootstrap-switch.min.css">
+    <script type="text/javascript" charset="utf8" src="/plugin_rfplayer/static/libraries/js/bootstrap-switch.min.js"></script>
+-->
+<div class="container">
+    <div class="list-group">
+        {% if manager.status in ['dead','stopped'] %}
+            {% if client_detail.status in ['starting','alive'] %}
+                <h4 id='manager-info'><i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}HUMMM, Plugin should have error.<br>
+                    Check plugin_rfplayer.log in domogik log directory {% endtrans %}<br>
+                    {% trans %}Error{% endtrans %} : {{ manager.error }}
+                </h4>
+            {% else %}
+                <h4 id='manager-info'><i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}OUPS, Plugin not started.{% endtrans %}</h4>
+            {% endif %}
+        {% elif manager.status == 'starting' %}
+            <h4 id='manager-info'><i class='fa fa-smile-o icon-info'></i> {% trans %}Manager starting, should be running soon...{% endtrans %}</h4>
+        {% elif manager.status == 'alive' %}
+            {% if manager.rfPlayers|length > 0 %}
+                <h4 id='manager-info'><i class='fa fa-smile-o icon-success'></i> {{ manager.rfPlayers|length }} {% trans %}RFPlayer detected{% endtrans %}</h4>
+            {% else %}
+                <h4 id='manager-info'><i class='fa fa-exclamation-circle icon-warning'></i>{% trans %}No RFPlayer detected. Create a domogik device (eg :{% endtrans %} Dongle RFP1000)</h4>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+<div class="container">
+    <h4>
+    <nav id="rfplayer2-navbar" class="nav navbar-tab" role="navigation">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#client-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+    {% if not dongle_active %}
+        {% if manager.rfPlayers|length > 0 %}
+            {% set dongle_active = manager.rfPlayers[0].rfplayerID %}
+        {% endif %}
+    {% endif %}
+    <div class="tabbable">
+        <ul  id="rfplayer-navbar" class="nav nav-tabs ">
+        {% for rfplayer in manager.rfPlayers %}
+            <li {% if dongle_active == rfplayer.rfplayerID %}class="active"{% endif %}>
+                <a data-toggle="tab" href="#{{ rfplayer.rfplayerID }}" onclick="selectActiveRFPlayer('{{ rfplayer.rfplayerID }}');return true;">
+                <h4 style="margin-top: 0px; margin-bottom: 0px;">
+                    <span id="ctrl-tab_{{ rfplayer.rfplayerID }}" class="label status-{{ rfplayer.state }}" data-toggle="tooltip" data-placement="bottom" title="{{ rfplayer.error }}">
+                        {{ rfplayer.rfplayerID }}
+                    </span>
+               </h4>
+                </a>
+            </li>
+        {% endfor %}
+            <li id="tools-tab" {% if dongle_active == "tools" %}class="active"{% endif %}>
+                <a data-toggle="tab" href="#tools-pane" onclick="sidebarVisible('dongle-menu', false);window.location.href='/plugin_rfplayer/{{ clientid }}/tools';return true;">tools</a>
+            </li>
+        </ul>
+    </div>
+    </nav>
+</div>
+<nav class="navbar navbar-default sidebar" role="navigation" id="dongle-menu">
+    <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li{% if donglemenu_active == "general" %} class="active" {% endif %}>
+                <a href="#" id="general-menu" onclick="switchDonglePage(activeDongle, donglemenu_active, 'general')">{% trans %}General{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-server"></span>
+                </a>
+            </li>
+            <li{% if donglemenu_active == "reception" %} class="active" {% endif %}>
+                <a href="#" id="reception-menu" onclick="switchDonglePage(activeDongle, donglemenu_active, 'reception')">{% trans %}Reception{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-rss fa-rotate-180"></span>
+                </a>
+            </li>
+            <li{% if donglemenu_active == "emission" %} class="active" {% endif %}>
+                <a href="#" id="emission-menu" onclick="switchDonglePage(activeDongle, donglemenu_active, 'emission')">{% trans %}Emission{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-rss"></span>
+                </a>
+            </li>
+            <li{% if donglemenu_active == "parrot" %} class="active" {% endif %}>
+                <a href="#" id="parrot-menu" onclick="switchDonglePage(activeDongle, donglemenu_active, 'parrot')">{% trans %}Parrot{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-graduation-cap"></span>
+                </a>
+            </li>
+            </li>
+            <li{% if donglemenu_active == "transcoder" %} class="active" {% endif %}>
+                <a href="#" id="transcoder-menu" onclick="switchDonglePage(activeDongle, donglemenu_active, 'transcoder')">{% trans %}Transcoder{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-random"></span>
+                </a>
+            </li>
+            </li>
+            <li{% if donglemenu_active == "system" %} class="active" {% endif %}>
+                <a href="#" id="system-menu" onclick="switchDonglePage(activeDongle, donglemenu_active, 'system')">{% trans %}System{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-cogs"></span>
+                </a>
+            </li>
+            </li>
+            <li{% if donglemenu_active == "repeater" %} class="active" {% endif %}>
+                <a href="#" id="repeater-menu" onclick="switchDonglePage(activeDongle, donglemenu_active, 'repeater')">{% trans %}Repeater{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-retweet"></span>
+                </a>
+            </li>
+            <li{% if donglemenu_active == "update" %} class="active" {% endif %}>
+                <a href="#" id="update-menu" onclick="switchDonglePage(activeDongle, donglemenu_active, 'update')">{% trans %}Update{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-download"></span>
+                </a>
+            </li>
+            </ul>
+        </div>
+  </div>
+</nav>
+<div class="container">
+    <div class="tab-content">
+    {% for rfplayer in manager.rfPlayers %}
+        <div class="tab-pane{% if dongle_active == rfplayer.rfplayerID %} active{% endif %}" id="{{ rfplayer.rfplayerID }}">
+        <!-- Page is insered after -->
+        </div>
+    {% endfor %}
+        <div class="tab-pane{% if dongle_active == 'tools' %} active{% endif %}" id="tools-pane">
+        <!-- Page is insered after -->
+        </div>
+    </div>
+</div>
+{% set flag = {'hide' : " hide"} %}
+{% for rfplayer in manager.rfPlayers %}
+    {% if rfplayer.locked == "updatefirmware" %}
+        {% if flag.update({'hide' : ""}) %} {% endif  %}
+    {% endif  %}
+{% endfor %}
+
+<div id="dongle-process-running" class="container exclusive-process{{ flag.hide }}">
+    <h1 class="text-danger text-center" style="display: inline-block;">{% trans %}Firmware{% endtrans %}<i class="fa fa-spinner fa-pulse fa-5x icon-warning"></i>{% trans %}updating{% endtrans %}</h1>
+</div>
+
+<script type="text/javascript">
+
+    var activeDongle = "{{ dongle_active }}";
+    var donglemenu_active = "{{ donglemenu_active }}";
+    var clientID = "{{ clientid }}";
+ //   console.log("{{ manager|safe }}")
+    /* Action which shows and hides div with a id */
+    $("[id^='toggle-OZWconfig']").click(function() {
+      var target_selector = $(this).attr('data-target');
+      toggleVisible(target_selector, this.id);
+      return false;
+    });
+
+    function toggleVisible(target_selector, icon_selector) {
+      var $target = $("[id^='"+target_selector+"']" );
+      if ($target.is(':hidden')) {
+        $target.show("fast" );
+        $('#'+icon_selector).removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+      } else {
+        $target.hide( "fast" );
+        $('#'+icon_selector).removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+      };
+    };
+
+    function sidebarVisible(target_selector, state) {
+      var $target = $("[id^='"+target_selector+"']" );
+      if (state) {
+        $target.show("fast" );
+      } else {
+        $target.hide( "fast" );
+      };
+    };
+
+    function setCtrlStatusHtml(ctrl) {
+        var htmlCtrl = $("#ctrl-info_"+ctrl.rfplayerID);
+        if (htmlCtrl.length == 0) {
+            $("<h2 id='ctrl-info_"+ctrl.rfplayerID+"'></h2>").insertAfter("#manager-info");
+            htmlCtrl = $("#ctrl-info_"+ctrl.rfplayerID);
+        };
+        var contentHtml = "";
+        var error = '';
+        var icon = ' fa-smile-o';
+        var iconColor = ' icon-success';
+        var info = '';
+        if (ctrl.error != undefined && ctrl.error != '') {
+            error = "<p class='marge'>- "+ctrl.error+"</p>";
+            iconColor = " icon-danger";
+        };
+        if (ctrl.init != undefined && ctrl.init != '') {
+            init = "<p class='marge'>- "+ctrl.init+"</p>";
+        };
+        if (ctrl.status == 'dead') {
+            icon = ' fa-exclamation-circle';
+            info = "<p class='marge'>- {% trans %}Check openzwave and plugin log file{% endtrans %}.</p>";
+        } else if (ctrl.status == 'alive') {
+            info =  "<p class='marge'>- {% trans %}You can use full access on left menu{% endtrans %}.</p>";
+        } else if (ctrl.status == 'starting') {
+            if (ctrl.init != undefined && ctrl.init.search('Opening') == -1)  {
+                info = "<p class='marge'>- {% trans %}Discovery of nodes, be patient{% endtrans %} ...</p>";
+            };
+            if (ctrl.init != undefined && (ctrl.init.search('In progress') != -1 || ctrl.init.search('ready') != -1))  {
+                info += "<p class='marge'>- {% trans %}You can already use full access on left menu{% endtrans %}.</p>";
+            };
+        } else if (ctrl.status == 'stopped') {
+            icon = ' fa-stop';
+            iconColor = " icon-danger";
+            info = "<p class='marge'>- {% trans %}Stopped{% endtrans %}.</p>"
+        } else {
+            icon = ' fa-question-circle';
+            iconColor = " icon-warning";
+            info = "<p class='marge'>- {% trans %}Unknown status{% endtrans %}: "+ ctrl.status +"</p>";
+        };
+        contentHtml = "<i class='fa"+icon+iconColor+"'></i> {% trans %}Zwave controller{% endtrans %} "+ctrl.rfplayerID+" - "+ctrl.HomeID+
+                             init + info + error;
+        $(htmlCtrl).html(contentHtml);
+    };
+
+    function selectActiveRFPlayer(rfplayerID) {
+        sidebarVisible('dongle-menu', true);
+        activeDongle = rfplayerID;
+    };
+
+    $("[id^='saveconf_']").click(function() {
+        var rfplayerID = this.id.split("_")[1];
+        $("#icsaveconf_" + rfplayerID).removeClass("glyphicon-floppy-save glyphicon-floppy-saved").addClass("glyphicon-hourglass");
+        sendRequest("ozwave.ctrl.saveconf", { "rfplayerID": rfplayerID }, function(data, result) {
+            if (data.content.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Fail to save config file',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                new PNotify({
+                    type: 'success',
+                    title: 'Config file saved',
+                    text: data.content.msg,
+                    delay: 4000
+                });
+            };
+            updateBtSavedConf(data.content.rfplayerID, data.content.saved);
+        });
+    });
+    $("#refrechdevList").click(function() {
+        var rfplayerID = this.id.split("_")[1];
+        $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh fa-spin");
+        sendRequest("ozwave.manager.refreshdeviceslist", {}, function(data, result) {
+            if (result == "error" || data.content.error != "") {
+                $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh");
+                new PNotify({
+                    type: 'error',
+                    title: 'Fail to refresh domogik device list',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                new PNotify({
+                    type: 'success',
+                    title: 'Refresh domogik device list',
+                    text: 'Refresh sended, waiting response...',
+                    delay: 4000
+                });
+            };
+        });
+    });
+
+    // ****************** WebSocket resquest *******************
+    function sendRequest(request, data, callback) {
+        $.getJSON('/plugin_rfplayer/' + clientID + '/request/' + request, data, callback);
+    };
+
+    $( document ).ready(function() {
+        var ws_onmessage_menu = ws.onmessage;
+        if (activeDongle == "" || activeDongle == "tools") {sidebarVisible('dongle-menu', false);};
+        $('[data-toggle="tooltip"]').tooltip({
+                    html:true
+                });
+        ws.onmessage = function(e) {
+            ws_onmessage_menu(e);
+            var data = JSON.parse(e.data);
+            if (data.msgid == "plugin.status") {
+                if ( data.content.host == '{{client_detail.host}}' && data.content.type + '-'+ data.content.name == '{{client_detail.package_id}}') {
+                    if (data.content.event == "starting" || data.content.event == "stopped" || data.content.event == "dead") {
+                        if ($('#client-status .status').text() != "starting") {
+                            $("#manager-info").html("<i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}OUPS, Plugin not started.{% endtrans %}");
+                            $("[id^='ctrl-tab_']").removeClass().addClass("label status-stopped").attr("data-original-title","{% trans %}Dongle not in line{% endtrans %}");
+                        } else {
+                            $("#manager-info").html("<i class='fa fa-smile-o icon-info'></i> {% trans %}Manager starting, should be running soon...{% endtrans %}");
+                            $("[id^='ctrl-tab_']").removeClass().addClass("label status-stopped").attr("data-original-title","{% trans %}Dongle stopped{% endtrans %}");
+                            if (data.content.event == "starting"){$("[id^='ctrl-tab_']").text('To discover');};
+                        };
+                    } else if (data.content.event == "alive") {
+                        if (!$("#manager-info i").hasClass('icon-success')) {
+                            $("#manager-info").html("<i class='fa fa-smile-o icon-success'></i> {{ manager.rfPlayers|length }} {% trans %}RFPlayer detected{% endtrans %}");
+                            $("[id^='ctrl-tab_']").removeClass().addClass("label status-starting").attr("data-original-title","{% trans %}Dongle starting{% endtrans %}");
+                        };
+                    };
+                };
+            } else {
+                var msgId = data.msgid.split(".");
+                if (msgId[0] == "rfplayer") {
+                    console.log("rfplayer menu publish receive :)", data);
+                    switch (msgId[1]) {
+                    case "manager" :
+                        switch (msgId[2]) {
+                            case "state" :
+                                $("#manager-info").html("<i class='fa fa-smile-o icon-"+data.content.status+"'></i> "+data.content.rfPlayers.length+" {% trans %}RFPlayer detected{% endtrans %} "+data.content.error);
+                                var tabNew = "";
+                                for (item in data.content.rfPlayers) {
+                                    var ctrl_tab = $("[id^='ctrl-tab_"+data.content.rfPlayers[item].rfplayerID+"']"),
+                                        title;
+                                    switch (data.content.rfPlayers[item].state) {
+                                        case 'dead' :
+                                            title = "{% trans %}Dongle not in line{% endtrans %}";
+                                            break;
+                                        case 'starting' :
+                                            title = "{% trans %}Dongle starting{% endtrans %}";
+                                            break;
+                                        case 'alive' :
+                                            break;
+                                            title = "{% trans %}Dongle in line{% endtrans %}";
+                                        case 'stopped' :
+                                            title = "{% trans %}Dongle stopped{% endtrans %}";
+                                    };
+                                    if (ctrl_tab.length == 0) {
+                                         tabNew = "<li> <a data-toggle='tab' href='#" + data.content.rfPlayers[item].rfplayerID +"' onclick=" +
+                                                "'selectActiveRFPlayer(" + '"' + data.content.rfPlayers[item].rfplayerID + '"' + ");return true;'" +
+                                                "'> <h4 style='margin-top: 0px; margin-bottom: 0px;'> <span id='ctrl-tab_" + data.content.rfPlayers[item].rfplayerID +
+                                                "' class='label status-" + data.content.rfPlayers[item].state + "' data-toggle='tooltip' data-placement='bottom' title='" + title + "'>" +
+                                                data.content.rfPlayers[item].rfplayerID + "</span>"+
+                                                "</h4> </a> </li>";
+                                         $(tabNew).insertBefore("#tools-tab");
+                                         tabNew = "<div class='tab-pane' id='" + data.content.rfPlayers[item].rfplayerID + "'></div>";
+                                         $(tabNew).insertBefore("#tools-pane");
+                                         $('#rfplayer-navbar a[href="#'+data.content.rfPlayers[item].rfplayerID+'"]').tab('show');
+                                         $("[id^='ctrl-tab_"+data.content.rfPlayers[item].rfplayerID+"']").tooltip();
+                                         selectActiveRFPlayer(data.content.rfPlayers[item].rfplayerID);
+                                         requestRefreshDongle(data.content.rfPlayers[item].rfplayerID);
+                                    } else {
+                                        ctrl_tab.removeClass().addClass("label status-" + data.content.rfPlayers[item].state).attr("data-original-title", title);
+                                        ctrl_tab.text(data.content.rfPlayers[item].rfplayerID);
+                                    };
+                                };
+                                break;
+                            case "refreshdeviceslist" :
+                                if (data.content.error == '') {
+                                    $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh");
+                                    new PNotify({
+                                        type: 'success',
+                                        title: 'Refresh domogik device list',
+                                        text: 'Refresh done.',
+                                        delay: 4000
+                                    });
+                                } else {
+                                    $("#refrechdevList-ic").removeClass().addClass("fa fa-exclamation-triangle");
+                                    new PNotify({
+                                        type: 'error',
+                                        title: 'Refresh domogik device list',
+                                        text: 'Refresh failed : ' + data.content.error,
+                                        delay: 4000
+                                    });
+                                };
+                                break;
+                        };
+                        break;
+                    case "client" :
+                            switch (msgId[2]) {
+                                case "state" :
+                                    if ((data.content.type == 'change') || (data.content.type == 'status')) {
+                                        $("[id^='ctrl-tab_"+data.content.rfplayerID+"']").removeClass().addClass("label status-" + data.content.state).attr("data-original-title",data.content.init);
+                                        $("[id^='ctrl-tab_"+data.content.rfplayerID+"']").text(data.content.rfplayerID);
+                                        var error = '';
+                                        if (data.content.HomeID != null) {
+                                            updateBtSavedConf(data.content.rfplayerID, data.content.saved);
+                                        };
+                                        if (data.content.status == "dead") {
+                                                new PNotify({
+                                                type: 'error',
+                                                title: data.content.value,
+                                                text: data.content.usermsg,
+                                                delay: 6000
+                                            });
+                                            $("#manager-init").text(data.content.rfplayerID+': '+data.content.usermsg);
+                                            error = data.content.usermsg;
+                                        };
+                                        setCtrlStatusHtml({'rfplayerID': data.content.rfplayerID, 'HomeID': data.content.HomeID, 'init' : data.content.usermsg,
+                                                                'status': data.content.status, 'error': error, 'Model': ''});
+                                    };
+                                    if (data.content.type == 'hard-reset') {
+                                        new PNotify({
+                                                    type: 'success',
+                                                    title: 'Hard Reset.',
+                                                    text: data.content.usermsg,
+                                                    delay: 8000
+                                        });
+                                        $("#dongle-process-running").addClass("hide");
+                                    };
+                                    break;
+                                case "saveconf":
+                                    if (data.content.result == "error") {
+                                        new PNotify({
+                                            type: 'error',
+                                            title: 'Fail to save config file',
+                                            text: data.content.error,
+                                            delay: 6000
+                                        });
+                                    } else {
+                                        new PNotify({
+                                            type: 'success',
+                                            title: 'Config file saved',
+                                            text: data.content.msg,
+                                            delay: 4000
+                                        });
+                                    };
+                                    updateBtSavedConf(data.content.rfplayerID, data.content.saved);
+                                    break;
+                                case "saveconfchange":
+                                    if ( updateBtSavedConf(data.content.rfplayerID, data.content.saved) && !data.content.saved ) {
+                                        new PNotify({
+                                            type: 'info',
+                                            title: 'ZWave network '+ data.content.rfplayerID +' config change',
+                                            text: 'Save config file to keep your change.',
+                                            delay: 6000
+                                        });
+                                    };
+                                    break;
+                                case "opening":
+                                    new PNotify({
+                                        type: 'info',
+                                        title: 'ZWave controller',
+                                        text: 'Network '+ data.content.rfplayerID +' opening driver '+ data.content.Driver,
+                                        delay: 6000
+                                    });
+                                    $("#manager-init").text('Opening driver '+data.content.Driver);
+                                    var ctrl_tab = $("[id^='ctrl-tab_"+data.content.rfplayerID+"']");
+                                    if (ctrl_tab.length != 0) {
+                                        ctrl_tab.removeClass().addClass("label status-starting").attr("data-original-title", "{% trans %}Opening controller{% endtrans %}");
+                                    };
+                                    break;
+                                case "closed":
+                                    new PNotify({
+                                        type: 'info',
+                                        title: 'ZWave controller',
+                                        text: 'Network '+ data.content.rfplayerID +' driver '+ data.content.Driver+' closed.',
+                                        delay: 6000
+                                    });
+                                    $("#manager-init").text('Driver '+data.content.Driver+' closed.');
+                                    var ctrl_tab = $("[id^='ctrl-tab_"+data.content.rfplayerID+"']");
+                                    if (ctrl_tab.length != 0) {
+                                        ctrl_tab.removeClass().addClass("label status-stopped").attr("data-original-title", "{% trans %}Controller is stopped{% endtrans %}");
+                                    };
+                                    break;
+                                case "command" :
+                                    if (data.content.state == "Error") {
+                                        new PNotify({
+                                            type: 'error',
+                                            title: 'ZWave '+ data.content.rfplayerID +' controller error',
+                                            text: 'Command : '+data.content.command+' <br>'+data.content.usermsg+'<br>Error : '+data.content.error,
+                                            delay: 6000
+                                        });
+                                    };
+                                    break;
+                            };
+                        break;
+                    };
+                };
+            };
+        };
+    });
+</script>
+
+{% endblock %}

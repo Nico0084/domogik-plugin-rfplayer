@@ -1,0 +1,138 @@
+{% block content %}
+
+<div class='container-fluid'>
+    <h3>{% trans %}General administration{% endtrans %}</h3>
+    <div id='general-cont' class='container-fluid'>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                <h4>{% trans %}System info{% endtrans %}</h4>
+            </div>
+            <div class='panel-body' id='sysinfo'>
+                <div class='row'>
+                    <div class='col-md-4'>
+                        <h4>{% trans %}Serial parameters{% endtrans %}</h4>
+                        <ul id='serialParams'>
+                            <li><b>TBL :</b> ...</li>
+                        </ul>
+                    </div>
+                    <div class='col-md-4'>
+                        <h4>{% trans %}System status{% endtrans %}</h4>
+                        <ul id='systemStatus'>
+                            <li><b>TBL :</b> ...</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-default center-block" id="btMonitor">
+                            <i id="btMonitor-ic" class="fa fa-play icon-success" aria-hidden="true"></i><span id="btMonitor-text"> Start monitoring</span>
+                        </button>
+                    </div>
+                </div>
+                <div class='row'>
+                    <h4>{% trans %}Protocoles{% endtrans %}</h4>
+                    <ul id='protocoles'>
+                    <div class='col-md-4'>
+                        <h5>Receiver</h5>
+                        <div class='checkbox'>
+                            <label><input type='checkbox' value='TBD'>TBD</label>
+                        </div>
+                    </div>
+                    <div class='col-md-4'>
+                        <h5>Repeater</h5>
+                        <div class='checkbox'>
+                            <label><input type='checkbox' value='TBD'>TBD</label>
+                        </div>
+                    </div>
+                    <div class='col-md-4'>
+                        <h5>Transmitter</h5>
+                        <div class='checkbox'>
+                            <label><input type='checkbox' value='TBD'>TBD</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <pre id='general-pre' style="height:500px;overflow:auto;">
+        {{ manager|safe }}
+    </pre>
+</div>
+<script type="text/javascript">
+
+function renderBlockGeneral(data){
+    var html = "";
+    for (var item in data.serialParam) {
+        html += "<li><b>"+item+" :</b> "+data.serialParam[item]+"</li>";
+    };
+    $("#serialParams").html(html);
+    html = "";
+    for (var item in data.status.systemStatus.infos) {
+        html += "<li><b>"+item+" :</b> "+data.status.systemStatus.infos[item].value+"</li>";
+    };
+    $("#systemStatus").html(html);
+    html = "";
+    for (var item in data.status.systemStatus.protocoles) {
+        html += "<div class='col-md-4'><h5>"+item[0].toUpperCase() + item.slice(1)+"</h5>";
+        for (var p in data.status.systemStatus.protocoles[item]) {
+            checked = ""
+            if (data.status.systemStatus.protocoles[item][p]) {checked = "checked";};
+              html += "<div class='checkbox'>"+
+                            "<label><input type='checkbox' value='"+p+"'"+checked+">"+p+"</label>"+
+                        "</div>";
+
+        };
+        html += "</div>";
+    $("#protocoles").html(html);
+    };
+};
+
+$(document).ready( function() {
+
+   $("#btMonitor").click(function(){
+        var  request = "stopmonitorclient";
+        if ($("#btMonitor-ic").hasClass("fa-play")) { var  request = "startmonitorclient"; };
+        sendRequest("rfplayer.client."+request, {"rfplayerID": activeDongle}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: '{% trans %}Monitoring RFPLayer dongle{% endtrans %}',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                if (data.content.state == 'started') {
+                    $("#btMonitor-ic").removeClass("fa-play icon-success").addClass("fa-stop icon-danger");
+                    $("#btMonitor-text").text(" Stop monitoring");
+                } else {
+                     $("#btMonitor-ic").removeClass("fa-stop icon-danger").addClass("fa-play icon-success");
+                    $("#btMonitor-text").text(" Start monitoring");
+                };
+                new PNotify({
+                    type: 'success',
+                    title: '{% trans %}Monitoring RFPLayer dongle{% endtrans %}',
+                    text: data.content.usermsg+"\n\n"+data.content.file,
+                    delay: 6000
+                });
+            };
+        });
+    });
+
+    var ws_onmessage_rfplayer_general = ws.onmessage;
+
+    ws.onmessage = function(e) {
+        ws_onmessage_rfplayer_general(e);
+        var data = JSON.parse(e.data);
+        var msgId = data.msgid.split(".");
+        if (msgId[0] == "rfplayer") {
+            if (msgId[1] == "client") {
+                switch (msgId[2]) {
+                    case "updatefirmware" :
+                        break;
+                };
+            };
+        };
+    };
+});
+
+</script>
+
+ {% endblock %}

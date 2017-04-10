@@ -1,0 +1,65 @@
+====================
+Plugin documentation
+====================
+
+.. |icon| image:: icon.png
+    :width: 64px
+
+|icon|
+
+Last change
+===========
+New instructions to apply changes from immediatly previous version.
+
+- 0.1.0 : (16-02-2017) First published version for domogik 0.5
+
+- `Previous change <changelog.html>`_
+
+Purpose
+=======
+Plugin to handle dongle RFPLAYER RFP1000 by www.ziblue.com/
+RFPLAYER is a new generation radio Frequency device. It looks like USB key with 2 independent Radio Frequency transceivers 433 Mhz and 868 Mhz dedicated to a Home Automation usage.
+The RFP1000 can be used in 2 ways :
+Plugged to a Home Automation Box, it will perform as a bidirectional radio GATEWAY to a multitude of Legacy Home Automation protocols. It can also be used as "PAROT : Learn & Play", ie being able to recognize or generate unknown protocols that have been learned by the RFP1000.
+
+Used in Stand Alonemode, it can then act as Plug & Play REPEATER with the possibility to do a TRANSCODING on 32 voices a RF protocol to another protocol. This mode is not used by domogi plugin.
+
+Protocols handled : VISONIC, CHACON/DIO, DOMIA, X10, DELTADORE, SOMFY, BLYSS (433Mhz), KD101, PARROT, Scientific Oregon, OWL Firmware is upgradable.
+Supported by domogik >=0.5.0 Development is in progress, features will get gradually
+
+Plugin configuration
+====================
+Configuration
+-------------
+In Domogik administration section, go to client plugin-nutserve details page.
+
++----------------+---------------+--------------------------------------------------------------------------------------+
+|Key             | Default value | Description                                                                          |
++================+===============+======================================================================================+
+| startup-plugin | false         | Automatically start plugin at Domogik startup                                        |
++----------------+---------------+--------------------------------------------------------------------------------------+
+
+Creating devices for RFPlayer Client
+------------------------------------
+In clients page of admin UI, go to **plugin-rfplayer-<your_host_domogik>**, select tab **"Devices"**, **"New"** to create your devices.
+
+Chose one way creation by product or instance type.
+
+Instance-type : rfplayer.rfp1000 (Dongle RFP1000)
+*************************************************
+
++----------------+-------------------+------------------------------------------------------------------------------+
+| Key            | Example           | Description                                                                  |
++================+===================+==============================================================================+
+| Device         | My_RFPlayer       | The display name for this device.                                            |
++----------------+-------------------+------------------------------------------------------------------------------+
+| Description    | What you want     | A short descriptionn for this device.                                        |
++----------------+-------------------+------------------------------------------------------------------------------+
+| Global         |                   | The path to the RFXCOM RFP1000 device.                                              |
+|   device       | /dev/rfp1000      | See udev rule to avoid /dev/ttyUSBx and changed port                         |
++----------------+-------------------+------------------------------------------------------------------------------+
+| Global         |                   | Timer (seconds) for poll RFP status                                          |
+|   timer_status | 60                |   - "0": desactivat polling.                                                 |
+|                |                   | Status is sended to domogik only if changed.                                 |
++------------- --+-------------------+------------------------------------------------------------------------------+
+

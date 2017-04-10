@@ -1,0 +1,10 @@
+﻿.. _toc:
+
+================
+Table of content
+================
+.. toctree::
+
+    /refplayer
+    /dev
+    /changelog

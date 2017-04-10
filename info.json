@@ -493,29 +493,85 @@
             ]
         },
         "rfplayer.temperature.lowbattery" : {
-            "description" : "Like Scientific Oregon  protocol (thermo sensors)",
+            "description" : "Thermo sensor. Like OREGON (THN122/132/***, THC238/268, THWR288, THRN122, AW129/131)",
             "id" : "rfplayer.temperature.lowbattery",
-            "name" : "Temperature and low battery flag",
+            "name" : "Temperature X10-433",
             "commands" : [],
             "sensors" : ["temperature", "low_battery", "rf_quality"],
             "parameters" : [{
                     "key" : "device",
 					"xpl": false,
-                    "description" : "Device address. Example: 0xFFFF.0.3",
+                    "description" : "Device address. Example: 0x0000.0.3",
                     "type" : "string"
                 }
             ]
         },
         "rfplayer.temperature.hygrometry.lowbattery" : {
-            "description" : "Like Scientific Oregon  protocol (thermo/hygro sensors)",
+            "description" : "Thermo/hygro sensors. Like OREGON (THGR122/228/238/268/328/810/918/928/, THGN50/122/123/132/800, THGRN228, RTGR328)",
             "id" : "rfplayer.temperature.hygrometry.lowbattery",
-            "name" : "Temperature/Humidity and low battery flag",
+            "name" : "Temperature/Humidity X10-433",
             "commands" : [],
             "sensors" : ["temperature", "hygrometry", "low_battery", "rf_quality"],
             "parameters" : [{
                     "key" : "device",
 					"xpl": false,
-                    "description" : "Device address. Example: 0xFFFF.1.2",
+                    "description" : "Device address. Example: 0x1A2D.1.2",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.temperature.hygrometry.pressure.lowbattery" : {
+            "description" : "Thermo/hygro/pressure sensors. Like OREGON (THGR918N)",
+            "id" : "rfplayer.temperature.hygrometry.pressure.lowbattery",
+            "name" : "Temperature/Humidity/pressure X10-433",
+            "commands" : [],
+            "sensors" : ["temperature", "hygrometry", "low_battery", "pressure", "rf_quality"],
+            "parameters" : [{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device address. Example: 0x5A6D.210.8",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.wind_speed.direction.lowbattery" : {
+            "description" : "Wind Speed sensors. Like OREGON (WGR800)",
+            "id" : "rfplayer.wind_speed.direction.lowbattery",
+            "name" : "Wind speed X10-433",
+            "commands" : [],
+            "sensors" : ["wind_speed", "direction", "low_battery", "rf_quality"],
+            "parameters" : [{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device address. Example: 0x1A89.12.2",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.uv.lowbattery" : {
+            "description" : "UV sensors. Like OREGON (UVN800)",
+            "id" : "rfplayer.uv.lowbattery",
+            "name" : "UV X10-433",
+            "commands" : [],
+            "sensors" : ["uv", "low_battery", "rf_quality"],
+            "parameters" : [{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device address. Example: 0xDA78.1.2",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.total_rain.rain.lowbattery" : {
+            "description" : "Rain sensors. Like OREGON (PCR800)",
+            "id" : "rfplayer.total_rain.rain.lowbattery",
+            "name" : "Rain X10-433",
+            "commands" : [],
+            "sensors" : ["total_rain", "rain", "low_battery", "rf_quality"],
+            "parameters" : [{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device address. Example: 0x2A19.51.1",
                     "type" : "string"
                 }
             ]

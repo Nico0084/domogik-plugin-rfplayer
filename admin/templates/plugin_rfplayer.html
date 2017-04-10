@@ -1,0 +1,249 @@
+{% extends theme("base/base.html") %}
+{% import theme("base/wtf.html") as wtf %}
+
+{% block content %}
+{% include theme("client_menu.html") %}
+
+{% include "plugin_rfplayer_menu.html" %}
+{% if manager.rfPlayers|length == 0 %}
+    <div class="container">
+    <h2>{% trans %}Welcome on RFPlayer advanced{% endtrans %}</h2>
+    {% if manager.status in ['dead','stopped'] %}
+        <h2>{% trans %}Start plugin to open communication with RFPlayer dongle(s){% endtrans %}</h2>
+    {% else %}
+        <h2>{% trans %}Create a domogik device for your first RFPlayer dongle{% endtrans %}</h2>
+    {% endif %}
+    </div>
+{% else %}
+    <div class="container" id="general-page" hidden>
+    {% include "general.html" %}
+    </div>
+    <div class="container" id="reception-page" hidden>
+    {% include "reception.html" %}
+    </div>
+    <div class="container" id="emission-page" hidden>
+    {% include "emission.html" %}
+    </div>
+    <div class="container" id="parrot-page" hidden>
+    {% include "parrot.html" %}
+    </div>
+    <div class="container" id="transcoder-page" hidden>
+    {% include "transcoder.html" %}
+    </div>
+    <div class="container" id="system-page" hidden>
+    {% include "system.html" %}
+    </div>
+    <div class="container" id="repeater-page" hidden>
+    {% include "repeater.html" %}
+    </div>
+    <div class="container" id="update-page" hidden>
+    {% include "update.html" %}
+    </div>
+{% endif %}
+
+<script type="text/javascript">
+
+    function requestRefreshDongle(action, rfplayerID) {
+        sendRequest("rfplayer.client.getinfos", {"rfplayerID": rfplayerID}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: '{% trans %}Refresh RFPLayer dongle{% endtrans %}',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                renderBlockGeneral(data.content);
+                $("#general-pre").text(JSON.stringify(data.content, null, 4));
+                $("#reception-cont").append(renderBlockProtocols('receiver', data.content));
+                for (var b=0; b < data.content.status.radioStatus.length; b++) {
+                    $("#reception-cont").append(renderBlockBand(data.content.status.radioStatus[b]));
+                }
+                $('[data-toggle="tooltip"]').tooltip({
+                    html:true
+                });
+                new PNotify({
+                    type: 'success',
+                    title: '{% trans %}Refresh RFPLayer dongle{% endtrans %}',
+                    text: '{% trans %}All data refreshed{% endtrans %}',
+                    delay: 4000
+                });
+            };
+        });
+    };
+
+    function switchDonglePage(dongle, oldpage, newpage) {
+        $('#'+oldpage+'-page').hide();
+        $('#'+oldpage+'-menu').parent().removeClass('active');
+        $('#'+newpage+'-page').show();
+        $('#'+newpage+'-menu').parent().addClass('active');
+        donglemenu_active = newpage;
+    };
+
+    function renderValueParam(name, params) {
+        var comment = '';
+        if (params.comment != "") {comment = ' ('+params.comment+')';};
+        return '<div class="col-md-3"><li title="'+params.help+'"><b>'+name+' :</b> '+params.value+' '+params.unit+comment+'</li></div>';
+    };
+
+    function renderSelectParam(name, params) {
+        var help = "";
+        if (params.help != "") {
+            help = '<span class="fa fa-info-circle fa-lg icon-info" data-toggle="tooltip" data-placement="top" title="'+params.help+'"></span>';
+        };
+        var html = '<div class="col-md-3"><div class="input-group placeholder">'+
+            '<label for="'+name+'" data-toggle="tooltip" data-placement="left" title="'+params.command.help+'">'+name+' : '+help+'</label>'+
+            '<select class="form-control actdisable" id="'+name+'">';
+        for (option in  params.command.values) {
+            selected = ''
+            if (option == params.value) {selected = " selected";};
+            html += '<option value="'+option+'"'+selected+'>'+params.command.values[option]+'</option>'
+        };
+        html += '</select></div></div>'
+        return html
+    };
+
+    function renderBlockProtocols(mode, data){
+        html = "<div class='panel panel-default'>"+
+               "<div class='panel-heading' data-toggle='tooltip' data-placement='top' title='{% trans %}Select activate protocols for reception{% endtrans %}'>"+
+                    "<h4>{% trans %}Protocols status{% endtrans %}</h4>"+
+               "</div>"+
+               "<div class='panel-body' id='"+mode+"_protocols'>"+
+                "<form>";
+        for (var p in data.status.systemStatus.protocoles[mode]) {
+            checked = ""
+            if (data.status.systemStatus.protocoles[mode][p]) {checked = "checked";};
+              html += "<label class='checkbox-inline' style='margin-left: 50px;'><input type='checkbox' value='"+p+"'"+checked+">"+p+"</label>";
+        };
+        html += "</form>";
+        html += "</div></div>";
+        return html;
+    };
+
+    function renderBlockBand(band) {
+        var enable = "danger";
+        var btBand = "<button class='btn btn-default center-block' id='runband_"+band.band+"'>"+
+                    "<i class='fa fa-play' id='runband-ic"+band.band+"' style='color:green'></i>"+
+                        "<span id='runctrl-text"+band.band+"'> Activate</span>"+
+                    "</button>";
+        if (band.params.Frequency.value != "0" || band.params.RFlink.value == "1") {
+            enable = "success";
+            btBand = "<button class='btn btn-default center-block' id='runband_"+band.band+"'>"+
+                        "<i class='fa fa-stop' id='runband-ic"+band.band+"' style='color:red'></i>"+
+                            "<span id='runctrl-text"+band.band+"'> Desactivate</span>"+
+                        "</button>"
+            };
+        html = "<div class='panel panel-default'>"+
+               "<div class='panel-heading'>"+
+                    "<h4>{% trans %}Radio band{% endtrans %} <b>"+band.band+"</b>"+
+                        "<div class='pull-right'><i id='band-ic_"+band.band+"' class='fa fa-2x fa-feed fa-rotate-180 icon-"+enable+"'></i></div>"+btBand+
+                    "</h4>"+
+               "</div>"+
+               "<div class='panel-body' id='band_"+band.band+"'><form>"
+        for (var param in band.params) {
+            if ('command' in band.params[param]) {
+                html += renderSelectParam(param, band.params[param]);
+            } else {
+                html += renderValueParam(param, band.params[param]);
+            };
+        };
+        html += "</form></div>";
+        return html;
+    };
+
+    $( document ).ready(function() {
+        var ws_onmessage_rfplayer = ws.onmessage;
+        {% if manager.rfPlayers|length > 0 %}
+            var container = document.getElementById(activeDongle);
+            $('#general-page').appendTo(container).show();
+            $('#reception-page').appendTo(container);
+            $('#emission-page').appendTo(container);
+            $('#parrot-page').appendTo(container);
+            $('#transcoder-page').appendTo(container);
+            $('#system-page').appendTo(container);
+            $('#repeater-page').appendTo(container);
+            $('#update-page').appendTo(container);
+        {% endif %}
+        ws.onmessage = function(e) {
+            ws_onmessage_rfplayer(e);
+            var data = JSON.parse(e.data);
+            var msgId = data.msgid.split(".");
+            if (msgId[0] == "rfplayer") {
+                if (msgId[1] == "client") {
+                    console.log("data");
+                    if (msgId[2] == "state") {
+                        if (data.content.rfplayerID == activeDongle) {
+                            if (data.content.monitored != '') {
+                                $("#btMonitor-ic").removeClass("fa-play icon-success").addClass("fa-stop icon-danger");
+                                $("#btMonitor-text").text(" Stop monitoring");
+                            } else {
+                                 $("#btMonitor-ic").removeClass("fa-stop icon-danger").addClass("fa-play icon-success");
+                                $("#btMonitor-text").text(" Start monitoring");
+                            };
+                            switch (data.content.status) {
+                                case 'dead' :
+                                    $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}OUPS, Plugin fail ! check domogik logs{% endtrans %}." +
+                                        "<br>{% trans %}Error{% endtrans %} : " + data.content.error);
+                                    $("#manager-info").html("");
+                                    $("[id^='ctrl-info']").html("");
+                                    break;
+                                case 'stopped' :
+                                    $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-info'></i> {% trans %}Plugin stopped{% endtrans %}.");
+                                    $("#manager-info").html("");
+                                    $("[id^='ctrl-info']").html("");
+                                    break;
+                                case 'starting' :
+                                    $("#ozw-info").html("<i class='fa fa-smile-o icon-info'></i> {% trans %}Openzwave Library starting, should be running soon...{% endtrans %}");
+                                    $("#manager-info").html("");
+                                    $("[id^='ctrl-info']").html("");
+                                    break;
+                                case 'alive' :
+                                    $("#ozw-info").html("<i class='fa fa-smile-o icon-success'></i> {% trans %}Openzwave Library ready{% endtrans %}.");
+                                    break;
+                                default :
+                                    $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}OUPS, Unknown OpenZwave library status : {% endtrans %}" + data.content.status +
+                                        "<br>{% trans %}Error{% endtrans %} : " + data.content.error);
+                                    $("#manager-info").html("");
+                                    $("[id^='ctrl-info']").html("");
+                            };
+                        };
+                    };
+                };
+                if (msgId[1] == "manager") {
+                    if (msgId[2] == "state") {
+                        switch (data.content.status) {
+                            case 'dead' :
+                                $("#manager-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> " +
+                                    "{% trans %}OUPS Plugin manager fail, check plugin_rfplayer.log in domogik log directory.{% endtrans %}<br>" + data.content.error);
+                                break;
+                            case 'starting' :
+                                $("#manager-info").html("<i class='fa fa-smile-o icon-info'></i> " +
+                                    "{% trans %}Plugin manager starting, dogle(s) should discover soon{% endtrans %}.");
+                                $("[id^='ctrl-info']").html("");
+                                break;
+                            case 'alive' :
+                                if (data.content.rfPlayers.length > 0) {
+                                    $("#manager-info").html("<i class='fa fa-smile-o icon-success'></i> " +
+                                        data.content.rfPlayers.length+" {% trans %}RFPlayer detected{% endtrans %}");
+                                } else {
+                                    $("#manager-info").html("<i class='fa fa-exclamation-circle icon-info'></i> " +
+                                        "{% trans %}Plugin manager OK{% endtrans %}. {% trans %}There is no dongle detected on domogik devices{% endtrans %}.");
+                                };
+                                break;
+                             default :
+                                $("#manager-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> " +
+                                    "{% trans %}HUMMM Plugin manager is in unknown state {% endtrans %} (" + data.content.status + ")" +
+                                    "{% trans %}check plugin_rfplayer.log in domogik log directory{% endtrans %}." +
+                                    "<br>{% trans %}Error{% endtrans %} : " + data.content.error );
+                       };
+                    };
+                };
+            };
+        };
+        if (activeDongle != "" && activeDongle != "tools") {
+            requestRefreshDongle('getinfos', activeDongle);
+        }
+    });
+</script>
+
+{% endblock %}
