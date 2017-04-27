@@ -67,7 +67,7 @@
                     "type" : "int"
                     },{
                     "sensor" : "pressure",
-                    "value" : 1016,
+                    "value" : 101600,
                     "type" : "int"
                     },{
                     "sensor" : "low_battery",
@@ -125,7 +125,7 @@
                     "type" : "bool"
                     },{
                     "sensor" : "rf_quality",
-                    "value" : 60,
+                    "value" : 20,
                     "type" : "int"
                     }
                   ]

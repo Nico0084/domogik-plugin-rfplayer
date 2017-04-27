@@ -53,7 +53,7 @@
                     },
                     {"description" :"Test infotype 5 Temp/Hydro/Pressure",
                       "action": "data",
-                      "data" : "ZIA33{'frame' :{'header': {'frameType': '0', 'cluster': '0', 'dataFlag': '0', 'rfLevel': '-68', 'floorNoise': '-96', 'rfQuality': '7','protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': 5', 'frequency': '433920'},'infos': {'subType': '0', 'id_PHY': '0x5A6D', 'id_PHYMeaning': 'THGR918N','adr_channel': '24580',  'adr': '96',  'channel': '4',  'qualifier': '17','lowBatt': '1', 'measures' : [{'type' : 'temperature', 'value' : '+21.5', 'unit' : 'Celsius'}, {'type' : 'hygrometry', 'value' : '75', 'unit' : '%'}, {'type' : 'pressure', 'value' : '1016', 'unit' : 'hPa'}]}}}",
+                      "data" : "ZIA33{'frame' :{'header': {'frameType': '0', 'cluster': '0', 'dataFlag': '0', 'rfLevel': '-68', 'floorNoise': '-96', 'rfQuality': '7','protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': '5', 'frequency': '433920'},'infos': {'subType': '0', 'id_PHY': '0x5A6D', 'id_PHYMeaning': 'THGR918N','adr_channel': '24580',  'adr': '96',  'channel': '4',  'qualifier': '17','lowBatt': '1', 'measures' : [{'type' : 'temperature', 'value' : '+21.5', 'unit' : 'Celsius'}, {'type' : 'hygrometry', 'value' : '75', 'unit' : '%'}, {'type' : 'pressure', 'value' : '1016', 'unit' : 'hPa'}]}}}",
                       "delay": 2
                     },
                     { "description" : "wait",
@@ -67,7 +67,7 @@
                     },
                     {"description" :"Test infotype 7 UV",
                       "action": "data",
-                      "data" : "ZIA33{'frame' :{'header': {'frameType': '0', 'cluster': '0', 'dataFlag': '0', 'rfLevel': '-84', 'floorNoise': '-113', 'rfQuality': '2','protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': '4', 'frequency': '433920'},'infos': {'subType': '0', 'id_PHY': '0xDA78', 'id_PHYMeaning': 'UVN800','adr_channel': '2054',  'adr': '8',  'channel': '6',  'qualifier': '17','lowBatt': '0','measures' : [{'type' : 'UV', 'value' : '5', 'unit' : '1/10 index'}]}}}",
+                      "data" : "ZIA33{'frame' :{'header': {'frameType': '0', 'cluster': '0', 'dataFlag': '0', 'rfLevel': '-84', 'floorNoise': '-113', 'rfQuality': '2','protocol': '5', 'protocolMeaning': 'OREGON', 'infoType': '7', 'frequency': '433920'},'infos': {'subType': '0', 'id_PHY': '0xDA78', 'id_PHYMeaning': 'UVN800','adr_channel': '2054',  'adr': '8',  'channel': '6',  'qualifier': '17','lowBatt': '0','measures' : [{'type' : 'uv', 'value' : '5', 'unit' : '1/10 index'}]}}}",
                       "delay": 2
                     },
                     {"description" :"Test infotype 9 Rain sensor",
