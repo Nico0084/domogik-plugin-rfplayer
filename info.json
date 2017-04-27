@@ -30,6 +30,21 @@
                 }
             ]
         },
+        "dimmer" : {
+            "name" : "Dimmer",
+            "return_confirmation" : true,
+            "parameters" : [{
+                    "key" : "value",
+                    "data_type" : "DT_UpDown",
+                    "conversion" : ""
+                },
+                {
+                    "key" : "level",
+                    "data_type" : "DT_Scaling",
+                    "conversion" : ""
+                }
+            ]
+        },
         "shutter" : {
             "name" : "Shutter",
             "return_confirmation" : true,
@@ -495,7 +510,7 @@
         "rfplayer.temperature.lowbattery" : {
             "description" : "Thermo sensor. Like OREGON (THN122/132/***, THC238/268, THWR288, THRN122, AW129/131)",
             "id" : "rfplayer.temperature.lowbattery",
-            "name" : "Temperature X10-433",
+            "name" : "Temperature Oregon",
             "commands" : [],
             "sensors" : ["temperature", "low_battery", "rf_quality"],
             "parameters" : [{
@@ -509,7 +524,7 @@
         "rfplayer.temperature.hygrometry.lowbattery" : {
             "description" : "Thermo/hygro sensors. Like OREGON (THGR122/228/238/268/328/810/918/928/, THGN50/122/123/132/800, THGRN228, RTGR328)",
             "id" : "rfplayer.temperature.hygrometry.lowbattery",
-            "name" : "Temperature/Humidity X10-433",
+            "name" : "Temperature/Humidity Oregon",
             "commands" : [],
             "sensors" : ["temperature", "hygrometry", "low_battery", "rf_quality"],
             "parameters" : [{
@@ -523,7 +538,7 @@
         "rfplayer.temperature.hygrometry.pressure.lowbattery" : {
             "description" : "Thermo/hygro/pressure sensors. Like OREGON (THGR918N)",
             "id" : "rfplayer.temperature.hygrometry.pressure.lowbattery",
-            "name" : "Temperature/Humidity/pressure X10-433",
+            "name" : "Temperature/Humidity/pressure Oregon",
             "commands" : [],
             "sensors" : ["temperature", "hygrometry", "low_battery", "pressure", "rf_quality"],
             "parameters" : [{
@@ -537,7 +552,7 @@
         "rfplayer.wind_speed.direction.lowbattery" : {
             "description" : "Wind Speed sensors. Like OREGON (WGR800)",
             "id" : "rfplayer.wind_speed.direction.lowbattery",
-            "name" : "Wind speed X10-433",
+            "name" : "Wind speed Oregon",
             "commands" : [],
             "sensors" : ["wind_speed", "direction", "low_battery", "rf_quality"],
             "parameters" : [{
@@ -551,7 +566,7 @@
         "rfplayer.uv.lowbattery" : {
             "description" : "UV sensors. Like OREGON (UVN800)",
             "id" : "rfplayer.uv.lowbattery",
-            "name" : "UV X10-433",
+            "name" : "UV Oregon",
             "commands" : [],
             "sensors" : ["uv", "low_battery", "rf_quality"],
             "parameters" : [{
@@ -565,13 +580,127 @@
         "rfplayer.total_rain.rain.lowbattery" : {
             "description" : "Rain sensors. Like OREGON (PCR800)",
             "id" : "rfplayer.total_rain.rain.lowbattery",
-            "name" : "Rain X10-433",
+            "name" : "Rain Oregon",
             "commands" : [],
             "sensors" : ["total_rain", "rain", "low_battery", "rf_quality"],
             "parameters" : [{
                     "key" : "device",
 					"xpl": false,
                     "description" : "Device address. Example: 0x2A19.51.1",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.1.dimmer" : {
+            "description" : "X10 protocol dimmer",
+            "id" : "rfplayer.1.dimmer",
+            "name" : "Dimmer X10-433",
+            "commands" : ["dimmer"],
+            "sensors" : [],
+            "parameters" : [{
+                    "key" : "dongle_id",
+					"xpl": false,
+                    "description" : "Dongle identification name which control dimmer",
+                    "type" : "string"
+                },{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device house and unit code  Example: A5",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.1.switch" : {
+            "description" : "X10 protocol switch",
+            "id" : "rfplayer.1.switch",
+            "name" : "Switch X10-433",
+            "commands" : ["switch", "switch_all"],
+            "sensors" : [],
+            "parameters" : [{
+                    "key" : "dongle_id",
+					"xpl": false,
+                    "description" : "Dongle identification name which control switch",
+                    "type" : "string"
+                },{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device house and unit code. Example: B2",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.3.dimmer" : {
+            "description" : "BLISS protocol dimmer",
+            "id" : "rfplayer.3.dimmer",
+            "name" : "Dimmer BLISS",
+            "commands" : ["dimmer"],
+            "sensors" : [],
+            "parameters" : [{
+                    "key" : "dongle_id",
+					"xpl": false,
+                    "description" : "Dongle identification name which control dimmer",
+                    "type" : "string"
+                },{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device house and unit code  Example: C2",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.3.switch" : {
+            "description" : "BLISS protocol switch",
+            "id" : "rfplayer.3.switch",
+            "name" : "Switch BLISS",
+            "commands" : ["switch"],
+            "sensors" : [],
+            "parameters" : [{
+                    "key" : "dongle_id",
+					"xpl": false,
+                    "description" : "Dongle identification name which control switch",
+                    "type" : "string"
+                },{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device house and unit code. Example: C1",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.4.dimmer" : {
+            "description" : "CHACON protocol dimmer",
+            "id" : "rfplayer.4.dimmer",
+            "name" : "Dimmer CHACON-DiO",
+            "commands" : ["dimmer"],
+            "sensors" : [],
+            "parameters" : [{
+                    "key" : "dongle_id",
+					"xpl": false,
+                    "description" : "Dongle identification name which control dimmer",
+                    "type" : "string"
+                },{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device house and unit code  Example: A5",
+                    "type" : "string"
+                }
+            ]
+        },
+        "rfplayer.4.switch" : {
+            "description" : "CHACON protocol switch",
+            "id" : "rfplayer.4.switch",
+            "name" : "Switch CHACON-DiO",
+            "commands" : ["switch", "switch_all"],
+            "sensors" : [],
+            "parameters" : [{
+                    "key" : "dongle_id",
+					"xpl": false,
+                    "description" : "Dongle identification name which control switch",
+                    "type" : "string"
+                },{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device house and unit code. Example: B2",
                     "type" : "string"
                 }
             ]
@@ -591,7 +720,7 @@
         "domogik_min_version" : "0.5.0",
         "name" : "rfplayer",
          "type" : "plugin",
-        "version" : "0.1.0"
+        "version" : "0.1.1"
     },
     "json_version" : 2
 }

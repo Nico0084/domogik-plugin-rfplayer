@@ -3,7 +3,88 @@
 
 import traceback
 
-# Protocoles Ids
+# Protocols Ids
+
+RF_PROTOCOLS = {"0" : {"name": "UNKNOWN", "freq": [], "infotype": []},
+                "1" : {"name": "VISONIC_", "freq": ["433"], "infotype": ["0", "1"]},
+                "2" : {"name": "VISONIC", "freq": ["868"], "infotype": ["2"]},
+                "3" : {"name": "CHACON", "freq": ["433"], "infotype": ["1"]},
+                "4" : {"name": "DOMIA", "freq": ["433"], "infotype": ["1"]},
+                "5" : {"name": "X10", "freq": ["433"], "infotype": ["4", "5", "6", "7", "9"]},
+                "6" : {"name": "X2D", "freq": ["433"], "infotype": ["0"]},
+                "7" : {"name": "X2D", "freq": ["868"], "infotype": ["8"]},
+                "8" : {"name": "X2D_SHUTTER", "freq": ["868"], "infotype": ["10", "11"]},
+                "9" : {"name": "X2D_HA_ELEC", "freq": ["868"], "infotype": ["3"]},
+                "10": {"name": "X2D_HA_GAS", "freq": ["868"], "infotype": ["1"]},
+                "12": {"name": "BLYSS", "freq": ["433"], "infotype": ["1"]},
+                "13": {"name": "PARROT", "freq": ["433", "868"], "infotype": ["0"]},
+                "14": {"nameid": "reserved", "freq": [], "infotype": []},
+                "15": {"name": "reserved", "freq": [], "infotype": []},
+                "16": {"name": "KD101", "freq": ["433"], "infotype": ["1"]}
+                }
+
+PROTOCOLS = {"0": {"name": "UNKNOWN",
+                                    "infotype": [],
+                                    "cmd":{}},
+                      "1": {"name": "X10",
+                                "infotype": ["0", "1"],
+                                "cmds":{
+                                    "switch":{
+                                        "0": "OFF {0} X10",
+                                        "1": "ON {0} X10",
+                                        },
+                                    "switch_all":{
+                                        "0": "ALL_OFF {0} X10",
+                                        "1": "ALL_ON {0} X10",
+                                        },
+                                    "dimmer":{
+                                        "0": "DIM {0} X10 %{1}",
+                                        "1": "BRIGHT {0} X10 %{1}",
+                                        }
+                                    }
+                            },
+                      "2": {"name": "VISONIC", "infotype": ["2"]},
+                      "3": {"name": "BLYSS",
+                                "infotype": ["1"],
+                                "cmds":{
+                                    "switch":{
+                                        "0": "OFF {0} BLYSS",
+                                        "1": "ON {0} BLYSS",
+                                        },
+                                    "dimmer":{
+                                        "0": "DIM {0} BLYSS %{1}",
+                                        "1": "BRIGHT {0} BLYSS %{1}",
+                                        }
+                                    }
+                            },
+                      "4": {"name": "CHACON",
+                                "infotype": ["1"],
+                                "cmds":{
+                                    "switch":{
+                                        "0": "OFF {0} CHACON",
+                                        "1": "ON {0} CHACON",
+                                        },
+                                    "switch_all":{
+                                        "0": "ALL_OFF {0} CHACON",
+                                        "1": "ALL_ON {0} CHACON",
+                                        },
+                                    "dimmer":{
+                                        "0": "DIM {0} CHACON %{1}",
+                                        "1": "BRIGHT {0} CHACON %{1}",
+                                        }
+                                    }
+                            },
+                      "5": {"name": "OREGON",
+                                "infotype": ["4", "5", "6", "7", "9"],
+                                "cmds":{}
+                            },
+                      "6": {"name": "DOMIA", "infotype": ["0"]},
+                      "7": {"name": "OWL", "infotype": ["8"]},
+                      "8": {"name": "XD2", "infotype": ["10", "11"]},
+                      "9": {"name": "RTS", "infotype": ["3"]},
+                      "10": {"name": "KD101", "infotype": ["1"]},
+                      "11": {"name": "PARROT", "infotype": ["0"]}
+                    }
 
 def getInfoType(data) :
     """Return infoType object of RFP data"""
@@ -20,6 +101,43 @@ def getInfoType(data) :
     elif data['header']['infoType'] == "10" : return InfoType10(data)
     elif data['header']['infoType'] == "11" : return InfoType11(data)
     return None
+
+def getInfoTypesFromProtocol(protocol):
+    """ Return infotype(s) corresponding to protocol"""
+    if protocol in PROTOCOLS :
+        return PROTOCOLS[protocol]['infotype']
+    return []
+
+def getInfoTypeFromCmd(device, cmd, command, values):
+    """" return infoType corresponding to a domogik cmd"""
+    data = getRfpDataFromDmgDevice(device)
+    if data is not None :
+        iTypes = getInfoTypesFromProtocol(data['header']['protocol'])
+        print(iTypes)
+        if iTypes != []:
+            for i in iTypes:
+                data['header']['infoType'] = i
+                iType = getInfoType(data)
+                print(iType)
+                if iType.get_cmd_to_RFP_data(cmd, command, values) is not None:
+                    return iType
+    return None
+
+def getRfpDataFromDmgDevice(device):
+    protocol = device['device_type_id'].split(".")[1]
+    if protocol in PROTOCOLS :
+        data = {"header": {
+                    "frameType": "0", "dataFlag": "1", "rfLevel": "", "floorNoise": "", "rfQuality": "",
+                    "protocol": protocol,
+                    "protocolMeaning": PROTOCOLS[protocol]["name"],
+                    "infoType": "255",
+                    "frequency": "868950"},
+                "infos": {"subType": "0", "subTypeMeaning": "", "id": device['parameters']['device']['value'],
+                    "qualifier": "",
+                    "qualifierMeaning": {}}}
+        return data
+    else :
+        return None
 
 class InfoType(object) :
     """Base class to handle InfoType"""
@@ -58,7 +176,7 @@ class InfoType(object) :
 
     def get_RFP_data_to_sensor(self, sensor):
         """Return sensor value from RFP data
-            @param data_type : the domogik sensor data_type dict.
+            @param sensor : the domogik sensor data_type dict.
             @return : value in data_type format, else None.
         """
         return None
@@ -66,6 +184,15 @@ class InfoType(object) :
     def get_Available_Sensors(self):
         """Return all dmg sensors id available by this infotype, for device detection"""
         return []
+
+    def get_cmd_to_RFP_data(self, cmd, command,  values):
+        """Return command  RFP data from dmg command value
+            @param cmd : the domogik command name reference.
+            @param command : the domogik command data_type dict.
+            @param values : dict of parameters and its value of command.
+            @return : ASCII Command format, else None.
+        """
+        return None
 
     def get_Available_Commands(self):
         """Return all dmg command id available by this infotype, for device detection"""
@@ -100,9 +227,30 @@ class InfoType0(InfoType) :
             pass
         return None
 
+    def get_cmd_to_RFP_data(self, cmd, command,  values):
+        """Return command  RFP data from dmg command value
+            @param cmd : the domogik command name reference.
+            @param command : the domogik command data_type dict.
+            @param values : dict of parameters and its value of command.
+            @return : ASCII Command format, else None.
+        """
+        try :
+            print(self.data)
+            print(cmd, command, values)
+            if cmd == "dimmer" :
+                cmdLine = PROTOCOLS[self.data['header']['protocol']]['cmds'][cmd][values['value']].format(self.data['infos']['id'], values['level'])
+            else :
+                cmdLine = PROTOCOLS[self.data['header']['protocol']]['cmds'][cmd][values['value']].format(self.data['infos']['id'])
+            print(cmdLine)
+            return cmdLine
+        except :
+            print(u"{0}".format(traceback.format_exc()))
+        return None
+
     def get_Available_Commands(self):
         """Return all dmg command id available by this infotype, for device detection"""
-        return [["switch", "switch_all", "bright_dim"]]
+        return [["switch", "switch_all", "dimmer"]]
+
 
 class InfoType1(InfoType0) :
     """Info Type for X10, BLYSS, CHACON, KD101 protocol"""
@@ -137,9 +285,9 @@ class InfoType1(InfoType0) :
     def get_Available_Commands(self):
         """Return all dmg command id available by this infotype, for device detection"""
         if self.data['header']['protocol'] in ["1", "4"] : # X10, CHACON
-            return [["switch"]]
+            return [["switch", "switch_all", "dimmer"]]
         elif self.data['header']['protocol'] in ["3", "10"] : # BLYSS, KD101
-            return [["switch", "switch_all"]]
+            return [["switch"]]
         return []
 
 class InfoType2(InfoType) :
@@ -361,7 +509,7 @@ class InfoType7(InfoType4) :
         try :
             for mes in self.data['infos']['measures']:
                 if mes['type'] == sensor['name']:  # TODO: Check type unit and name correspondance on real data
-                    if sensor['data_type'] == "DT_Number" and mes['unit'] == '':
+                    if sensor['data_type'] == "DT_Number" : # and mes['unit'] == '': # TODO: NO unit control for momment, must be checked
                         return int(mes['value'])
             if sensor['reference'] == "low_battery" :
                 return int(self.data['infos']['lowBatt'])

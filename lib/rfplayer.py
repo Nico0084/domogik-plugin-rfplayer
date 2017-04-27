@@ -96,8 +96,30 @@ class RFPManager(object):
         self.log.info(u"Closing RFPManager.")
         for id in self.rfpClients : self.rfpClients[id].close()
 
-    def sendRFPcmd(self,  clID,  cmd):
-        """Envoie une commmande au server NUT"""
+    def sendRFPcmd(self, device, cmd_id, values):
+        """Send command to RFPlayer"""
+        print(cmd_id, values)
+        cmd = None
+        for k in device['commands'].keys():
+            if  device['commands'][k]['id'] == cmd_id:
+                cmd = device['commands'][k]
+                break
+        if cmd is not None :
+            if 'dongle_id' in device['parameters'] :
+                CliName = device['parameters']['dongle_id']['value']
+                client = self.getClientFromDevName(CliName)
+                if client is not None :
+                    iType = getInfoTypeFromCmd(device, k, cmd, values)
+                    if iType is not None :
+                        #Add device address
+                        client.send_to_RFP(iType.get_cmd_to_RFP_data(k, cmd, values))
+                        return True, None
+                    return False, u"Command {0} for {1} does not match to an infoType.".format(cmd, device['device_type_id'])
+                return False, u"Command {0} don't find rfplayer dongle named {1}.".format(cmd, CliName)
+            return False, u"Command {0} device {1} have no dongle id.".format(cmd, device['name'])
+        else :
+            self.log.warning(u"Command id {0} not exist in device {1}".format(cmd_id, device))
+            return False, u"Command id {0} not exist in device {1}".format(cmd_id, device['name'])
 
     def addClient(self, dmgDevice):
         """Add a RFPLayer from domogik device"""
@@ -141,6 +163,13 @@ class RFPManager(object):
             return self.rfpClients[clID]
         else :
             return None
+
+    def getClientFromDevName(self, name):
+        """Get RFPLayer client object by id."""
+        for clID in self.rfpClients.keys():
+            if clID.split(".")[0] == name:
+                return self.rfpClients[clID]
+        return None
 
     def getIdsClient(self, idToCheck):
         """Get RFPLayer client key ids."""
@@ -226,10 +255,10 @@ class RFPManager(object):
         likelyDevices = {iType.dmgDevice_Id : {'listSensors':  iType.get_Available_Sensors(),
                                'listCmds': iType.get_Available_Commands(),
                                'reference': u"Protocol {0}".format(iType.protocol_name)}}
-        print(u"***************** likly domogik devices for node ****************")
+        print(u"***************** likly domogik devices for sensor ****************")
         print(likelyDevices)
         knownDeviceTypes = self.findDeviceTypes(likelyDevices)
-        print(u"***************** existing domogik device_types for node ****************")
+        print(u"***************** existing domogik device_types for sensor ****************")
         print(knownDeviceTypes)
         if knownDeviceTypes :
             self.registerDetectedDevice(knownDeviceTypes)

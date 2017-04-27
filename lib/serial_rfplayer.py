@@ -377,6 +377,7 @@ class SerialRFPlayer(object):
         if self.isOpen :
             try:
                 self.rfPlayer.write(b'{0}{1}'.format(data, '\r'))
+                print(u"Data writed : {0}".format(data))
             except serial.SerialException:
                 self.log.error(u"Error while writing on {0} device {1} (disconnected ?) : {2}".format(self.RFP_type, self.RFP_device, traceback.format_exc()))
                 self.close()
@@ -392,6 +393,8 @@ class SerialRFPlayer(object):
                 data = self.write_RFP.get(block = True, timeout = 2)
             except Empty:
                 continue
+            else :
+                self.log.debug(u"New data to send : {0}".format(data))
             self._waiting_for_reponse = True if data['response'] else False
             with self.RFP_Lock:
                 self.log.debug(u"Send request {0} on {1} {2}".format(data['data'], self.RFP_type, self.RFP_device))
@@ -476,6 +479,7 @@ class SerialRFPlayer(object):
         else :
             ackFor = {}
         cmd +=" {0}".format(command)
+        self.log.debug(u"Push msg in command queue : {0}".format(cmd))
         self.write_RFP.put_nowait({'data': cmd, 'response': response, 'ackFor': ackFor})
 
     def RebuildFirmware(self, data):
@@ -715,4 +719,3 @@ class SerialRFPlayer(object):
                                  ,'timeout' : self.timeout, 'xonxoff' : self.xonxoff, 'rtscts' : self.rtscts, 'dsrdtr' : self.dsrdtr}
         retVal['status'] = {}
         return retVal
-

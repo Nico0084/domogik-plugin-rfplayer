@@ -105,8 +105,8 @@ class RFPlayer(Plugin):
         Plugin.on_mdp_request(self, msg)
         # call a function to reply to the message depending on the header
         action = msg.get_action().split(".")
-        handled = False
         if action[0] == 'rfplayer' :
+            handled = False
             self.log.debug(u"Handle MQ request action <{0}>.".format(action))
             if action[1] in ["manager", "client"] :
                 handled = True
@@ -120,24 +120,23 @@ class RFPlayer(Plugin):
                 self.reply(reply_msg.get())
                 if "ack" in data and data['ack'] == "pub":
                     self.publishMsg("{0}.{1}.{2}".format(action[0], action[1], action[2]), report)
-        if not handled :
+            if not handled :
                 self.log.warning(u"MQ request unknown action <{0}>.".format(action))
         elif action[0] == "client" and action[1] == "cmd" :
             # action on dmg device
             data = msg.get_data()
-            cmd =""
+            cmd = {}
             for k in data.keys():
                 if k not in ['device_id', 'command_id'] :
-                    cmd = k
-                    break;
+                    cmd[k] = data[k]
             reply_msg = MQMessage()
             reply_msg.set_action('client.cmd.result')
-            if cmd != "":
-                device = self.managerRFP.getZWRefFromDB(data['device_id'], data['command_id'], "cmd")
+            if cmd != {}:
+                device = self.dmgDeviceFromId(data['device_id'])
                 if device :
-                    self.managerRFP.sendCmdToZW(device, cmd, data[cmd])
-                    reply_msg.add_data('status', True)
-                    reply_msg.add_data('reason', None)
+                    status, reason = self.managerRFP.sendRFPcmd(device, data['command_id'], cmd)
+                    reply_msg.add_data('status', status)
+                    reply_msg.add_data('reason', reason)
                 else :
                     self.log.warning(u"Abording command, no device found for command MQ: {0}".format(data))
                     reply_msg.add_data('status', False)
@@ -149,6 +148,13 @@ class RFPlayer(Plugin):
 
             self.log.debug(u"Reply to MQ: {0}".format(reply_msg.get()))
             self.reply(reply_msg.get())
+
+    def dmgDeviceFromId(self, id):
+        """ Return domogik device correponding to db id"""
+        for device in self.devices :
+            if device['id'] == int(id) :
+                return device
+        return None
 
     def getDmgDevices(self, deviceId):
         """ Search if domogik device exist for id and return it/them, else return []"""
