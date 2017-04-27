@@ -1,3 +1,5 @@
+.. _index:
+
 ====================
 Plugin documentation
 ====================
@@ -7,30 +9,56 @@ Plugin documentation
 
 |icon|
 
-Last change
-===========
+Last changes
+============
 New instructions to apply changes from immediatly previous version.
 
-- 0.1.0 : (10-04-2017) First published version for domogik 0.5
+- 0.1.1 : (22-04-2017) udev-rules updated with ziblue dongle identification, add X10/CHACON/BLISS commands.
 
 - `Previous change <changelog.html>`_
 
 Purpose
 =======
-Plugin to handle dongle RFPLAYER RFP1000 by www.ziblue.com/
-RFPLAYER is a new generation radio Frequency device. It looks like USB key with 2 independent Radio Frequency transceivers 433 Mhz and 868 Mhz dedicated to a Home Automation usage.
-The RFP1000 can be used in 2 ways :
-Plugged to a Home Automation Box, it will perform as a bidirectional radio GATEWAY to a multitude of Legacy Home Automation protocols. It can also be used as "PAROT : Learn & Play", ie being able to recognize or generate unknown protocols that have been learned by the RFP1000.
 
-Used in Stand Alonemode, it can then act as Plug & Play REPEATER with the possibility to do a TRANSCODING on 32 voices a RF protocol to another protocol. This mode is not used by domogi plugin.
+.. note::
+
+    Please notice that this plugin is **still in development**!
+
+    If you find any issue, please create a ticket on the Gihub repository : https://github.com/Nico0084/domogik-plugin-rfplayer/issues
+
+    In the same way, if something is not clear or wrong in this documentation, feel free to open a ticket!
+
+Plugin to handle dongle `RFPLAYER RFP1000 <https://rfplayer.com/>`_ by `Ziblue <https://ziblue.com/>`_ .
+
+RFPLAYER is a new generation radio Frequency device. It looks like USB key with 2 independent Radio Frequency transceivers 433 Mhz and 868 Mhz dedicated to a Home Automation usage.
+
+The RFP1000 can be used in 2 ways :
+
+* Plugged to a Domogik, it will perform as a bidirectional radio GATEWAY to a multitude of Legacy Home Automation protocols. It can also be used as "PAROT : Learn & Play", ie being able to recognize or generate unknown protocols that have been learned by the RFP1000.
+
+* Used in Stand Alonemode, it can then act as Plug & Play REPEATER with the possibility to do a TRANSCODING on 32 voices a RF protocol to another protocol. This mode is not used by domogi plugin.
 
 Protocols handled : VISONIC, CHACON/DIO, DOMIA, X10, DELTADORE, SOMFY, BLYSS (433Mhz), KD101, PARROT, Scientific Oregon, OWL Firmware is upgradable.
-Supported by domogik >=0.5.0 Development is in progress, features will get gradually
+Supported by Domogik >=0.5.0 Development is in progress, features will get gradually
+
+Steps to set up your first rfplayer device
+------------------------------------------
+
+To set up your first rfplayer device, you will have to :
+
+* install this plugin on Domogik (see `install a plugin on Domogik <http://domogik.readthedocs.io/en/master/users/quickstart/install_a_package.html>`_ )
+* install this plugin dependencies
+* create an udev rule for your rfplayer dongle (the usb device you plug on the computer)
+* configure this plugin
+* create a Domogik device for your rfp1000 dongle
+* start the plugin
+* in the *Detected devices* pages, look for your rfplayer device and get informations about it
+* create the Domogik device for your rfplayer device
 
 Dependencies
 ============
 
-There is no dependency.
+* `pyserial <https://pypi.python.org/pypi/pyserial>`_ (>=3.0)
 
 Install the RFPlayer usb device
 ===============================
@@ -38,19 +66,25 @@ Install the RFPlayer usb device
 Create an udev rule
 -------------------
 
-You may create a udev rule for this device. You can find sample udev rules in the **udev/** folder of this plugin.
-
-You just need to copy the choosen sample file in the folder **/etc/udev/rules.d/** and unplug/plug the device.
-
-RFP1000 key
-***********
+You may create a udev rule for this device. You can find sample udev rules in the **udev_rules/** folder of this plugin.
 
 .. |rfp1000| image:: RFP1000.png
     :width: 128px
 
-|rfp1000|
++--------------------------------------------------+-------------------------------+--------------------+
+|RFPLAYER dongle model                             |udev rule file                 |device declared     |
++--------------------------------------------------+-------------------------------+--------------------+
+| RFP1000 dongle   |rfp1000|                       |97-usbrfp1000.rules            |/dev/rfp1000        |
++--------------------------------------------------+-------------------------------+--------------------+
 
-You could use **udev/97-usbrfp1000.rules** files. But actually ZiBlue key doesn't handle particular rules key. Detection result could fail.
+To install a udev rule, copy the appropriate file in the udev rules folder on your system. Example ::
+
+    $ sudo cp udev_rules/97-usbrfp1000.rules /etc/udev/rules.d/
+
+Then, you can use the following command to apply the udev rule, or unplug/plug the dongle. ::
+
+    $ sudo udevadm control --reload-rules
+	$ sudo udevadm trigger
 
 Plugin configuration
 ====================
@@ -66,7 +100,13 @@ In Domogik administration section, go to client plugin-nutserve details page.
 
 Creating devices for RFPlayer Client
 ------------------------------------
-In clients page of admin UI, go to **plugin-rfplayer-<your_host_domogik>**, select tab **"Devices"**, **"New"** to create your devices.
+
+.. |create_devices| image:: create_devices.png
+    :width: 450px
+
+In clients page of admin UI, go to **plugin-rfplayer.<your_host_domogik>**, select tab **"Devices"**, **"New"** to create your devices.
+
+|create_devices|
 
 Chose one way creation by product or instance type.
 
@@ -76,7 +116,8 @@ Instance-type : rfplayer.rfp1000 (Dongle RFP1000)
 +----------------+-------------------+------------------------------------------------------------------------------+
 | Key            | Example           | Description                                                                  |
 +================+===================+==============================================================================+
-| Device         | My_RFPlayer       | The display name for this device.                                            |
+| Device         | My_RFPlayer       | The display name for this device. Used by device with command                |
+|                |                   | (switch/dimmer...) This is the way to identify witch dongle control devices. |
 +----------------+-------------------+------------------------------------------------------------------------------+
 | Description    | What you want     | A short descriptionn for this device.                                        |
 +----------------+-------------------+------------------------------------------------------------------------------+
@@ -84,8 +125,8 @@ Instance-type : rfplayer.rfp1000 (Dongle RFP1000)
 |   device       | /dev/rfp1000      | See udev rule to avoid /dev/ttyUSBx and changed port                         |
 +----------------+-------------------+------------------------------------------------------------------------------+
 | Global         |                   | Timer (seconds) for poll RFP status                                          |
-|   timer_status | 60                |   "0": desactivat polling.                                                   |
-|                |                   | Status is sended to domogik only if changed.                                 |
+|   timer_status | 60                | "0": desactivat polling.                                                     |
+|                |                   | Status is sended to domogik only on change.                                  |
 +----------------+-------------------+------------------------------------------------------------------------------+
 
 Devices capabilities
@@ -94,20 +135,61 @@ Devices capabilities
 Protocoles and device_type
 --------------------------
 
-X10 (433Mhz)
-************
-
 Select corresponding device :
 
-* Temperature sensors : use **rfplayer.temperature.lowbattery** for OREGON (THN122/132/***, THC238/268, THWR288, THRN122, AW129/131)
-* Temperature/Humidity sensors : use **rfplayer.temperature.hygrometry.lowbattery** for OREGON (THGR122/228/238/268/328/810/918/928/, THGN50/122/123/132/800, THGRN228, RTGR328)
-* Temperature/Humidity/Pressure sensors : use **rfplayer.temperature.hygrometry.pressure.lowbattery** for OREGON (THGR918N)
-* Wind speed sensors : use **rfplayer.wind_speed.direction.lowbattery** for OREGON (WGR800)
-* UV sensors : use **rfplayer.uv.lowbattery** for OREGON (UVN800)
-* Rain sensors : use **rfplayer.total_rain.rain.lowbattery** for OREGON (PCR800)
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Type                 | device type                     | Protocols | Model           | key       | Example     | Description                                     |
++======================+=================================+===========+=================+===========+=============+=================================================+
+| Temperature sensors  | rfplayer.temperature.lowbattery | OREGON    | THN122/132/***  | device    | 0x0000.0.3  | Device address retrieve from device detected    |
+|                      |                                 |           | THC238/268      |           |             |                                                 |
+|                      |                                 |           | THRN122         |           |             |                                                 |
+|                      |                                 |           | AW129/131       |           |             |                                                 |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Temperature/Humidity | rfplayer.temperature.hygrometry | OREGON    | THGR122/228/238 | device    | 0x1A2D.1.2  | Device address retrieve from device detected    |
+| sensors              | .lowbattery                     |           | /328/810/918/928|           |             |                                                 |
+|                      |                                 |           | THGN50/122/123  |           |             |                                                 |
+|                      |                                 |           | /132/800        |           |             |                                                 |
+|                      |                                 |           | THGRN228 RTGR328|           |             |                                                 |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Temperature/Humidity | rfplayer.temperature.hygrometry | OREGON    | THGR918N        | device    | 0x5A6D.2.8  | Device address retrieve from device detected    |
+| Pressure sensors     | .pressure.lowbattery            |           |                 |           |             |                                                 |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Wind speed sensor    | rfplayer.wind_speed.direction   | OREGON    | WGR800          | device    | 0x1A89.3.2  | Device address retrieve from device detected    |
+|                      | .lowbattery                     |           |                 |           |             |                                                 |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| UV sensors           | rfplayer.uv.lowbattery          | OREGON    | UVN800          | device    | 0xDA78.1.0  | Device address retrieve from device detected    |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Rain sensor          | rfplayer.total_rain.rain        | OREGON    | PCR800          | device    | 0x2A19.1.4  | Device address retrieve from device detected    |
+|                      | .lowbattery                     |           |                 |           |             |                                                 |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Dimmer X10           | rfplayer.1.dimmer               | X10       |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control dimmer |
+|                      |                                 |           |                 | device    | A2          | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Switch X10           | rfplayer.1.switch               | X10       |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control switch |
+|                      |                                 |           |                 | device    | A3          | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Dimmer BLISS         | rfplayer.3.dimmer               | BLISS     |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control dimmer |
+|                      |                                 |           |                 | device    | B2          | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Switch BLISS         | rfplayer.3.switch               | BLISS     |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control switch |
+|                      |                                 |           |                 | device    | B3          | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Dimmer CHACON DiO    | rfplayer.4.dimmer               | CHACON    |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control dimmer |
+|                      |                                 |           |                 | device    | C1          | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
+| Switch CHACON DiO    | rfplayer.4.switch               | CHACON    |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control switch |
+|                      |                                 |           |                 | device    | C4          | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
 
 Detected devices
 ----------------
 
-.. todo ::
-	Explain how to find device address
+.. |detected_devices| image:: detected_devices.png
+    :width: 450px
+
+In clients page of admin UI, go to **plugin-rfplayer.<your_host_domogik>**, select tab **"Devices"**, **"Detected devices"** to get list of all sensors devices not created.
+
+|detected_devices|  
+    
+Only devices sending sensors value himself can be detected. Use it to find device address for new or change.

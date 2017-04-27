@@ -6,5 +6,6 @@ Table of content
 .. toctree::
 
     /rfplayer
+    /advanced
     /dev
     /changelog

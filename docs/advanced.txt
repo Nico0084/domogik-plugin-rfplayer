@@ -1,0 +1,82 @@
+=====================
+Plugin Advanced Admin
+=====================
+
+.. |under_construction| image:: under_construction.png
+    :width: 400px
+ 	
+.. |advanced| image:: advanced.png
+    :width: 700px
+
+|under_construction|
+
+|advanced|
+
+In plugin **Advanced** page
+
+* Select tab of your RFPLAYER
+* Select item on popup left menu for dongle administration
+
+General
+-------
+
+*For moment infomations are only on read.*
+
+Give information about system and protocoles activation
+
+You can start a monitoring of all dongle data. Usefull to debug and join it to issue on plugin github repository.
+
+Reception
+---------
+
+*For moment infomations are only on read.*
+
+Give infomations about protoles reception and radio band configuration.
+
+Emission
+--------
+
+*Under construction*
+
+Parrot
+------
+
+*Under construction*
+
+Transcoder
+----------
+
+*Under construction*
+
+System
+------
+
+*Under construction*
+
+Repeater
+--------
+
+*Under construction*
+
+Update
+------
+
+.. |firm_1| image:: firmware_1.png
+    :width: 600px
+    
+.. |firm_2| image:: firmware_2.png
+    :width: 600px
+	
+Menu to update the dongle firmware  
+
+* Please, pay attention to the displayed instructions.
+
+* Chose a official Ziblue Firmware, It will be checked and a **Start** button will appears.
+
+|firm_1|
+
+* Proccess information will display during all update process.
+
+|firm_2|
+
+

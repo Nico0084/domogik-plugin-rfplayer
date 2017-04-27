@@ -2,10 +2,18 @@
 Changelog
 =========
 
-0.1.0
------
+0.1.1 (22-04-2017)
+------------------
 
-* domogik 0.5 compatibilité
+* Update udev rules **97-usbrfp1000.rules** with ziblue dongle identification
+* Add X10/CHACON/BLISS commands.
+* Update doc.
+
+
+0.1.0 (12-04-2017)
+------------------
+
+* domogik 0.5 compatibility
 * Plugin creation
 
 
