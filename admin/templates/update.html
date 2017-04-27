@@ -127,7 +127,8 @@ $(document).ready( function() {
     });
 
    function sendFirmwareFile(line){
-        var step = 1000;
+        var step = 130; // Limited by gunicorn to preserve from DDOS attack up to 4094 client’s HTTP request-line
+        // TODO: Check to increase at max 8190 on gunicorn in admin http start.
         if (line+step > firmwareData.length) { step = firmwareData.length-line; };
         sendRequest("rfplayer.client.updatefirmware", {"rfplayerID": activeDongle, "firmwareFile": firmwareFile,"firmwareData": firmwareData.slice(line, line+step).join('\n'),
                                                        'line': line, 'step': step, 'size': firmwareData.length},
