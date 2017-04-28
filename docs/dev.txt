@@ -2,6 +2,11 @@
 Development informations
 ========================
 
+.. |under_construction| image:: under_construction.png
+    :width: 300px
+ 	
+|under_construction|
+
 xPL messages
 ============
 

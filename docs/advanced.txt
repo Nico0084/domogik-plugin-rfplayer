@@ -1,9 +1,9 @@
-=====================
-Plugin Advanced Admin
-=====================
+==============
+Advanced Admin
+==============
 
 .. |under_construction| image:: under_construction.png
-    :width: 400px
+    :width: 300px
  	
 .. |advanced| image:: advanced.png
     :width: 700px
@@ -18,7 +18,7 @@ In plugin **Advanced** page
 * Select item on popup left menu for dongle administration
 
 General
--------
+=======
 
 *For moment infomations are only on read.*
 
@@ -26,40 +26,50 @@ Give information about system and protocoles activation
 
 You can start a monitoring of all dongle data. Usefull to debug and join it to issue on plugin github repository.
 
+.. |general_admin| image:: general_admin.png
+    :width: 500px
+
+|general_admin|
+
 Reception
----------
+=========
 
 *For moment infomations are only on read.*
 
 Give infomations about protoles reception and radio band configuration.
 
+.. |recep_admin| image:: recep_admin.png
+    :width: 500px
+
+|recep_admin|
+
 Emission
---------
+========
 
 *Under construction*
 
 Parrot
-------
+======
 
 *Under construction*
 
 Transcoder
-----------
+==========
 
 *Under construction*
 
 System
-------
+======
 
 *Under construction*
 
 Repeater
---------
+========
 
 *Under construction*
 
 Update
-------
+======
 
 .. |firm_1| image:: firmware_1.png
     :width: 600px

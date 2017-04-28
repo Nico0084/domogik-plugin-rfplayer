@@ -52,8 +52,8 @@ To set up your first rfplayer device, you will have to :
 * configure this plugin
 * create a Domogik device for your rfp1000 dongle
 * start the plugin
-* in the *Detected devices* pages, look for your rfplayer device and get informations about it
-* create the Domogik device for your rfplayer device
+* in the *Detected devices* pages, look for your devices and get informations about them
+* create the Domogik device for your devices
 
 Dependencies
 ============
@@ -79,12 +79,12 @@ You may create a udev rule for this device. You can find sample udev rules in th
 
 To install a udev rule, copy the appropriate file in the udev rules folder on your system. Example ::
 
-    $ sudo cp udev_rules/97-usbrfp1000.rules /etc/udev/rules.d/
+$ sudo cp udev_rules/97-usbrfp1000.rules /etc/udev/rules.d/
 
 Then, you can use the following command to apply the udev rule, or unplug/plug the dongle. ::
 
-    $ sudo udevadm control --reload-rules
-	$ sudo udevadm trigger
+$ sudo udevadm control --reload-rules
+$ sudo udevadm trigger
 
 Plugin configuration
 ====================
@@ -122,6 +122,7 @@ Instance-type : rfplayer.rfp1000 (Dongle RFP1000)
 | Description    | What you want     | A short descriptionn for this device.                                        |
 +----------------+-------------------+------------------------------------------------------------------------------+
 | Global         |                   | The path to the RFXCOM RFP1000 device.                                       |
+|                |                   |                                                                              |
 |   device       | /dev/rfp1000      | See udev rule to avoid /dev/ttyUSBx and changed port                         |
 +----------------+-------------------+------------------------------------------------------------------------------+
 | Global         |                   | Timer (seconds) for poll RFP status                                          |
@@ -137,50 +138,51 @@ Protocoles and device_type
 
 Select corresponding device :
 
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Type                 | device type                     | Protocols | Model           | key       | Example     | Description                                     |
-+======================+=================================+===========+=================+===========+=============+=================================================+
-| Temperature sensors  | rfplayer.temperature.lowbattery | OREGON    | THN122/132/***  | device    | 0x0000.0.3  | Device address retrieve from device detected    |
-|                      |                                 |           | THC238/268      |           |             |                                                 |
-|                      |                                 |           | THRN122         |           |             |                                                 |
-|                      |                                 |           | AW129/131       |           |             |                                                 |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Temperature/Humidity | rfplayer.temperature.hygrometry | OREGON    | THGR122/228/238 | device    | 0x1A2D.1.2  | Device address retrieve from device detected    |
-| sensors              | .lowbattery                     |           | /328/810/918/928|           |             |                                                 |
-|                      |                                 |           | THGN50/122/123  |           |             |                                                 |
-|                      |                                 |           | /132/800        |           |             |                                                 |
-|                      |                                 |           | THGRN228 RTGR328|           |             |                                                 |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Temperature/Humidity | rfplayer.temperature.hygrometry | OREGON    | THGR918N        | device    | 0x5A6D.2.8  | Device address retrieve from device detected    |
-| Pressure sensors     | .pressure.lowbattery            |           |                 |           |             |                                                 |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Wind speed sensor    | rfplayer.wind_speed.direction   | OREGON    | WGR800          | device    | 0x1A89.3.2  | Device address retrieve from device detected    |
-|                      | .lowbattery                     |           |                 |           |             |                                                 |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| UV sensors           | rfplayer.uv.lowbattery          | OREGON    | UVN800          | device    | 0xDA78.1.0  | Device address retrieve from device detected    |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Rain sensor          | rfplayer.total_rain.rain        | OREGON    | PCR800          | device    | 0x2A19.1.4  | Device address retrieve from device detected    |
-|                      | .lowbattery                     |           |                 |           |             |                                                 |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Dimmer X10           | rfplayer.1.dimmer               | X10       |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control dimmer |
-|                      |                                 |           |                 | device    | A2          | Device house and unit cod                       |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Switch X10           | rfplayer.1.switch               | X10       |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control switch |
-|                      |                                 |           |                 | device    | A3          | Device house and unit cod                       |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Dimmer BLISS         | rfplayer.3.dimmer               | BLISS     |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control dimmer |
-|                      |                                 |           |                 | device    | B2          | Device house and unit cod                       |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Switch BLISS         | rfplayer.3.switch               | BLISS     |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control switch |
-|                      |                                 |           |                 | device    | B3          | Device house and unit cod                       |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Dimmer CHACON DiO    | rfplayer.4.dimmer               | CHACON    |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control dimmer |
-|                      |                                 |           |                 | device    | C1          | Device house and unit cod                       |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
-| Switch CHACON DiO    | rfplayer.4.switch               | CHACON    |                 | dongle_id |*My_RFPlayer*| Dongle identification name which control switch |
-|                      |                                 |           |                 | device    | C4          | Device house and unit cod                       |
-+----------------------+---------------------------------+-----------+-----------------+-----------+-------------+-------------------------------------------------+
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Type                 | device type                     | Protocols | Model             | key       | Example     | Description                                       |
++======================+=================================+===========+===================+===========+=============+===================================================+
+| Temperature sensors  | rfplayer.temperature.lowbattery | OREGON    | | THN122/132/...  | device    | 0x0000.0.3  | Device address retrieve from device detected      |
+|                      |                                 |           | | THC238/268      |           |             |                                                   |
+|                      |                                 |           | | THRN122         |           |             |                                                   |
+|                      |                                 |           | | AW129/131       |           |             |                                                   |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Temperature/Humidity | rfplayer.temperature.hygrometry | OREGON    | | THGR122/228/238 | device    | 0x1A2D.1.2  | Device address retrieve from device detected      |
+| sensors              | .lowbattery                     |           | | /328/810/918/928|           |             |                                                   |
+|                      |                                 |           | | THGN50/122/123  |           |             |                                                   |
+|                      |                                 |           | | /132/800        |           |             |                                                   |
+|                      |                                 |           | | THGRN228 RTGR328|           |             |                                                   |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Temperature/Humidity | rfplayer.temperature.hygrometry | OREGON    | | THGR918N        | device    | 0x5A6D.2.8  | Device address retrieve from device detected      |
+| Pressure sensors     | .pressure.lowbattery            |           |                   |           |             |                                                   |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Wind speed sensor    | rfplayer.wind_speed.direction   | OREGON    | | WGR800          | device    | 0x1A89.3.2  | Device address retrieve from device detected      |
+|                      | .lowbattery                     |           |                   |           |             |                                                   |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| UV sensors           | rfplayer.uv.lowbattery          | OREGON    | | UVN800          | device    | 0xDA78.1.0  | Device address retrieve from device detected      |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Rain sensor          | rfplayer.total_rain.rain        | OREGON    | | PCR800          | device    | 0x2A19.1.4  | Device address retrieve from device detected      |
+|                      | .lowbattery                     |           |                   |           |             |                                                   |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| **Devices command**                                                                                                                                                  |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Dimmer X10           | rfplayer.1.dimmer               | X10       |                   | dongle_id |*My_RFPlayer*| | Dongle identification name which control dimmer |
+|                      |                                 |           |                   | device    | A2          | | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Switch X10           | rfplayer.1.switch               | X10       |                   | dongle_id |*My_RFPlayer*| | Dongle identification name which control switch |
+|                      |                                 |           |                   | device    | A3          | | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Dimmer BLISS         | rfplayer.3.dimmer               | BLISS     |                   | dongle_id |*My_RFPlayer*| | Dongle identification name which control dimmer |
+|                      |                                 |           |                   | device    | B2          | | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Switch BLISS         | rfplayer.3.switch               | BLISS     |                   | dongle_id |*My_RFPlayer*| | Dongle identification name which control switch |
+|                      |                                 |           |                   | device    | B3          | | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Dimmer CHACON DiO    | rfplayer.4.dimmer               | CHACON    |                   | dongle_id |*My_RFPlayer*| | Dongle identification name which control dimmer |
+|                      |                                 |           |                   | device    | C1          | | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
+| Switch CHACON DiO    | rfplayer.4.switch               | CHACON    |                   | dongle_id |*My_RFPlayer*| | Dongle identification name which control switch |
+|                      |                                 |           |                   | device    | C4          | | Device house and unit cod                       |
++----------------------+---------------------------------+-----------+-------------------+-----------+-------------+---------------------------------------------------+
 
 Detected devices
 ----------------

@@ -7,5 +7,6 @@ Table of content
 
     /rfplayer
     /advanced
+    /tools
     /dev
     /changelog

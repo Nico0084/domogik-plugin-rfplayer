@@ -8,6 +8,7 @@
 *.egg
 *.egg-info
 _build
+_build_doc
 eggs
 develop-eggs
 .installed.cfg

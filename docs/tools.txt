@@ -1,0 +1,10 @@
+=============
+Manager tools 
+=============
+
+.. |under_construction| image:: under_construction.png
+    :width: 300px
+ 	
+|under_construction|
+
+*Page to get log and others plugin manager info*
