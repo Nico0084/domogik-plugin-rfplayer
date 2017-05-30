@@ -607,6 +607,11 @@
 					"xpl": false,
                     "description" : "Device house and unit code  Example: A5",
                     "type" : "string"
+                },{
+                    "key" : "burst",
+					"xpl": false,
+                    "description" : "Define a frame repetition factor. 0 is default.",
+                    "type" : "integer"
                 }
             ]
         },
@@ -626,6 +631,11 @@
 					"xpl": false,
                     "description" : "Device house and unit code. Example: B2",
                     "type" : "string"
+                },{
+                    "key" : "burst",
+					"xpl": false,
+                    "description" : "Define a frame repetition factor. 0 is default.",
+                    "type" : "integer"
                 }
             ]
         },
@@ -645,6 +655,11 @@
 					"xpl": false,
                     "description" : "Device house and unit code  Example: C2",
                     "type" : "string"
+                },{
+                    "key" : "burst",
+					"xpl": false,
+                    "description" : "Define a frame repetition factor. 0 is default.",
+                    "type" : "integer"
                 }
             ]
         },
@@ -664,6 +679,11 @@
 					"xpl": false,
                     "description" : "Device house and unit code. Example: C1",
                     "type" : "string"
+                },{
+                    "key" : "burst",
+					"xpl": false,
+                    "description" : "Define a frame repetition factor. 0 is default.",
+                    "type" : "integer"
                 }
             ]
         },
@@ -683,6 +703,11 @@
 					"xpl": false,
                     "description" : "Device house and unit code  Example: A5",
                     "type" : "string"
+                },{
+                    "key" : "burst",
+					"xpl": false,
+                    "description" : "Define a frame repetition factor. 0 is default.",
+                    "type" : "integer"
                 }
             ]
         },
@@ -702,6 +727,11 @@
 					"xpl": false,
                     "description" : "Device house and unit code. Example: B2",
                     "type" : "string"
+                },{
+                    "key" : "burst",
+					"xpl": false,
+                    "description" : "Define a frame repetition factor. 0 is default.",
+                    "type" : "integer"
                 }
             ]
         }

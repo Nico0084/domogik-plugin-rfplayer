@@ -119,9 +119,11 @@ def getInfoTypeFromCmd(device, cmd, command, values):
                 data['header']['infoType'] = i
                 iType = getInfoType(data)
                 print(iType)
+                values['burst'] = data["infos"]["burst"]
+                values['qualifier'] = data["infos"]["qualifier"]
                 if iType.get_cmd_to_RFP_data(cmd, command, values) is not None:
-                    return iType
-    return None
+                    return iType, values
+    return None, None
 
 def getRfpDataFromDmgDevice(device):
     protocol = device['device_type_id'].split(".")[1]
@@ -134,7 +136,14 @@ def getRfpDataFromDmgDevice(device):
                     "frequency": "868950"},
                 "infos": {"subType": "0", "subTypeMeaning": "", "id": device['parameters']['device']['value'],
                     "qualifier": "",
+                    "burst": "0",
                     "qualifierMeaning": {}}}
+        if 'burst' in device['parameters']:
+            print(u"burst param for command : {0}".format(device['parameters']['burst']['value']))
+            data["infos"]["burst"] = str(device['parameters']['burst']['value'])
+        if 'qualifier' in device['parameters']:
+            print(u"qualifier param for command : {0}".format(device['parameters']['qualifier']['value']))
+            data["infos"]["qualifier"] = str(device['parameters']['qualifier']['value'])
         return data
     else :
         return None
@@ -185,7 +194,7 @@ class InfoType(object) :
         """Return all dmg sensors id available by this infotype, for device detection"""
         return []
 
-    def get_cmd_to_RFP_data(self, cmd, command,  values):
+    def get_cmd_to_RFP_data(self, cmd, command, values):
         """Return command  RFP data from dmg command value
             @param cmd : the domogik command name reference.
             @param command : the domogik command data_type dict.
@@ -227,7 +236,7 @@ class InfoType0(InfoType) :
             pass
         return None
 
-    def get_cmd_to_RFP_data(self, cmd, command,  values):
+    def get_cmd_to_RFP_data(self, cmd, command, values):
         """Return command  RFP data from dmg command value
             @param cmd : the domogik command name reference.
             @param command : the domogik command data_type dict.
@@ -241,6 +250,8 @@ class InfoType0(InfoType) :
                 cmdLine = PROTOCOLS[self.data['header']['protocol']]['cmds'][cmd][values['value']].format(self.data['infos']['id'], values['level'])
             else :
                 cmdLine = PROTOCOLS[self.data['header']['protocol']]['cmds'][cmd][values['value']].format(self.data['infos']['id'])
+            if 'burst' in values and values['burst'] != "0" : cmdLine = "{0} BURST {1}".format(cmdLine, values['burst'])
+            if 'qualifier' in values and values['qualifier'] != "" : cmdLine = "{0} QUALIFIER {1}".format(cmdLine, values['qualifier'])
             print(cmdLine)
             return cmdLine
         except :
