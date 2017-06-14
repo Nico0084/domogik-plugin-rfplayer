@@ -744,6 +744,10 @@
             {
                 "id": "pyserial (>=3.0)",
                 "type": "python"
+            },
+            {
+                "id": "tailer (>=0.2.1)",
+                "type": "python"
             }
         ],
         "description" : "Handle RFPlayer device form ZiBlue compagny",
