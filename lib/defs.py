@@ -55,7 +55,7 @@ class RFPlayerException(Exception):
 def getRFPId(device):
     """ Return key RFPLayer id for rfplClients list."""
     if device.has_key('name') and device.has_key('id'):
-        return "{0}.{1}".format(device['name'], device['id'])
+        return "{0}-{1}".format(device['name'], device['id'])
     else : return None
 
 def checkIfConfigured(deviceType,  device):

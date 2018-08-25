@@ -1,10 +1,515 @@
 {% block content %}
 
 <div class='container-fluid'>
-    <h3>{% trans %}RFPlayer dongle transcoder{% endtrans %}</h3>
-    <pre>
-        {{ manager|safe }}
-    </pre>
+    <h3>{% trans %}Transcoder administration{% endtrans %}</h3>
+    <div id='transcoder-cont' class='container-fluid'>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <a class="bg-info" href="#" onclick="toggleVisible('transcodList', 'toggle-transcodList');return false;">
+                    <h4>
+                        <span class="glyphicon pull-left glyphicon-chevron-down" id="toggle-transcodList" aria-hidden="true" data-target="transcodList"></span>
+                        <span>&nbsp;&nbsp;{% trans %}Trancoder items{% endtrans %}</span>
+                        <span id="count_transcode" class="pull-right badge" title="Count">0</span>
+                    </h4>
+                </a>
+            </div>
+            <div class="panel-body" id="transcodList" style="width: 95%; display: none;" hidden="">
+                <h5>{% trans %}There is no transcoder recorded{% endtrans %}</h5>
+            </div>
+        </div>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                <h4>{% trans %}Edit transcoding item{% endtrans %}</h4>
+            </div>
+            <div class='panel-body' id='transcoder'>
+                <div class="well well-sm" data-toggle='tooltip' data-placement='top' title='{% trans %}Step one: set general parameters{% endtrans %}'>
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="recordNum">{% trans %}Record number{% endtrans %} :</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-pencil" id="recordNum-ic" aria-hidden="true"></span>
+                                    </span>
+                                    <select class="form-control" id="recordNum" placeholder="{% trans %}Select one to create/modify{% endtrans %}">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-10">
+                            <label for="userComment">{% trans %}Comment{% endtrans %} :</label>
+                            <input type="text" class="form-control" id="userComment" placeholder="{% trans %}Max length is 30 characters{% endtrans %}.">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="srcMode">{% trans %}Acquisition mode{% endtrans %} :</label>
+                                <select class="form-control" id="srcMode" placeholder="{% trans %}Select mode{% endtrans %}">
+                                    <option value="MANUAL">{% trans %}Manual{% endtrans %}</option>
+                                    <option value="CAPTURE">{% trans %}Capture on-the-fly{% endtrans %}</option>
+                                    <option value="KEEP">{% trans %}Keep As{% endtrans %}</option>
+                                </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="well well-sm" data-toggle='tooltip' data-placement='top' title='{% trans %}Step two: set protocols reception{% endtrans %}'>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="srcprotocols">{% trans %}Source protocols{% endtrans %} :</label>
+                                <select class="form-control source-protocol" id="srcprotocols" placeholder="{% trans %}Select source protocol{% endtrans %}">
+                                    <option value="X10">X10</option>
+                                    <option value="VISONIC">VISONIC</option>
+                                    <option value="BLYSS">BLYSS</option>
+                                    <option value="CHACON">CHACON</option>
+                                    <option value="OREGON">OREGON</option>
+                                    <option value="DOMIA">DOMIA</option>
+                                    <option value="OWL">OWL</option>
+                                    <option value="X2D">X2D</option>
+                                    <option value="RFY">RFY</option>
+                                    <option value="KD101">KD101</option>
+                                    <option value="PARROT">PARROT</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="srcAddrMode" style="display:block;">{% trans %}Select addressing mode{% endtrans %} :</label>
+                                <button class="btn btn-primary source-protocol" type="button" id="srcAddrMode" state='pseudo'>Pseudo-address</button>
+                            </div>
+                        </div>
+                        <div class="col-md-4" id='srcOptAddr_psa-1'>
+                            <div class="input-group">
+                                <label for="srcAddrPsa1">{% trans %}House code{% endtrans %} :</label>
+                                <select class="form-control source-protocol" id="srcAddrPsa1" placeholder="{% trans %}Select the house code{% endtrans %}">
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                    <option value="F">F</option>
+                                    <option value="G">G</option>
+                                    <option value="H">H</option>
+                                    <option value="I">I</option>
+                                    <option value="J">J</option>
+                                    <option value="K">K</option>
+                                    <option value="L">L</option>
+                                    <option value="M">M</option>
+                                    <option value="N">N</option>
+                                    <option value="O">O</option>
+                                    <option value="P">P</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4" id='srcOptAddr_psa-2'>
+                            <div class="input-group">
+                                <label for="srcAddrPsa2">{% trans %}CodeUnit{% endtrans %} :</label>
+                                <select class="form-control source-protocol" id="srcAddrPsa2" placeholder="{% trans %}Select the unit code{% endtrans %}">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4 hidden" id='srcOptAddr_id'>
+                            <label for="srcAddrID">{% trans %}Address ID{% endtrans %} :</label>
+                            <div class="input-group">
+                                <span class="input-group-addon">ID :</span>
+                                <input type="text" class="form-control input-sm source-protocol" id="srcAddrID" placeholder="{% trans %}Direct number between 0 and 255{% endtrans %}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5 class="text-center">Optional parameters</h5>
+                            <div class="well well-sm" style="background-color:#d9d9d9;">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="srcSubtype">{% trans %}Subtype{% endtrans %} :</label>
+                                        <input type="text" class="form-control input-sm source-protocol" id="srcSubtype" placeholder="{% trans %}Number protocol dependent{% endtrans %}">
+                                     </div>
+                                     <div class="col-md-4">
+                                        <label for="srcQualifier">{% trans %}Qualifier{% endtrans %} :</label>
+                                        <input type="text" class="form-control input-sm source-protocol" id="srcQualifier" placeholder="{% trans %}Eg: shutter (0) or portal (1) for Somfy RTS{% endtrans %}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="well well-sm" data-toggle='tooltip' data-placement='top' title='{% trans %}Step tree: set protocols transcoded{% endtrans %}'>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="outprotocols">{% trans %}Output protocols{% endtrans %} :</label>
+                                <select class="form-control" id="outprotocols" placeholder="{% trans %}Select output protocol{% endtrans %}">
+                                    <option value="VISONIC433">VISONIC 433 MHz</option>
+                                    <option value="VISONIC868">VISONIC 868 MHz</option>
+                                    <option value="CHACON">CHACON</option>
+                                    <option value="DOMIA">DOMIA</option>
+                                    <option value="X10">X10</option>
+                                    <option value="X2D433">X2D 433 MHz</option>
+                                    <option value="X2D868">X2D 868 MHz</option>
+                                    <option value="X2DELEC">X2D elec</option>
+                                    <option value="X2DGAS">X2D gas</option>
+                                    <option value="RTF">RTF</option>
+                                    <option value="BLYSS">BLYSS</option>
+                                    <option value="PARROT">PARROT</option>
+                                    <option value="KD101">KD101</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="outCmd">{% trans %}Transcoded command{% endtrans %} :</label>
+                                <select class="form-control" id="outCmd" placeholder="{% trans %}Select output command{% endtrans %}">
+                                    <option value="ON">ON</option>
+                                    <option value="OFF">OFF</option>
+                                    <option value="DIM">DIM</option>
+                                    <option value="ASSOC">Association on</option>
+                                    <option value="ASSOC_OFF">Association off</option>
+                                    <option value="DISSOC">Dissociation on</option>
+                                    <option value="DISSOC_OFF">Dissociation off</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="outAddrMode" style="display:block;">{% trans %}Select addressing mode{% endtrans %} :</label>
+                                <button class="btn btn-primary" type="button" id="outAddrMode" state='pseudo'>Pseudo-address</button>
+                            </div>
+                        </div>
+                        <div class="col-md-4" id='outOptAddr_psa-1'>
+                            <div class="input-group">
+                                <label for="outAddrPsa1">{% trans %}House code{% endtrans %} :</label>
+                                <select class="form-control" id="outAddrPsa1" placeholder="{% trans %}Select the house code{% endtrans %}">
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                    <option value="F">F</option>
+                                    <option value="G">G</option>
+                                    <option value="H">H</option>
+                                    <option value="I">I</option>
+                                    <option value="J">J</option>
+                                    <option value="K">K</option>
+                                    <option value="L">L</option>
+                                    <option value="M">M</option>
+                                    <option value="N">N</option>
+                                    <option value="O">O</option>
+                                    <option value="P">P</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4" id='outOptAddr_psa-2'>
+                            <div class="input-group">
+                                <label for="outAddrPsa2">{% trans %}CodeUnit{% endtrans %} :</label>
+                                <select class="form-control" id="outAddrPsa2" placeholder="{% trans %}Select the unit code{% endtrans %}">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4 hidden" id='outOptAddr_id'>
+                            <label for="outAddrID">{% trans %}Address ID{% endtrans %} :</label>
+                            <div class="input-group">
+                                <span class="input-group-addon">ID :</span>
+                                <input type="text" class="form-control input-sm" id="outAddrID" placeholder="{% trans %}Direct number between 0 and 255{% endtrans %}">
+                            </div>
+                        </div>
+                    </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5 class="text-center">Optional parameters</h5>
+                        <div class="well well-sm" style="background-color:#d9d9d9;">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="outBrust">{% trans %}Burst{% endtrans %} :</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control input-sm" id="outBrust" placeholder="{% trans %}Number of bursts{% endtrans %}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="outQualifier">{% trans %}Qualifier{% endtrans %} :</label>
+                                    <input type="text" class="form-control input-sm" id="outQualifier" placeholder="{% trans %}Eg: shutter (0) or portal (1) for Somfy RTS{% endtrans %}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="outDim">{% trans %}DIM{% endtrans %}% :</label>
+                                    <input type="text" class="form-control input-sm" id="outDim" placeholder="{% trans %}Dimming value for DIM command{% endtrans %}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-4 col-md-4">
+                    <button class="btn btn-primary center-block" id="transcoderSave">
+                        <i class="fa fa-floppy-o"></i>
+                        <span>  Save record</span>
+                    </button>
+                </div>
+                <div class="col-xs-4 col-md-4">
+                    <button class="btn btn-primary center-block" id="transcoderDel">
+                        <i class="fa fa-trash-o"></i>
+                        <span>  Remove selected record</span>
+                    </button>
+                </div>
+                <div class="col-xs-4 col-md-4">
+                    <button class="btn btn-primary center-block" id="transcoderDelAll">
+                        <i class="fa fa-trash"></i>
+                        <span> Remove all record</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+<script type="text/javascript">
 
- {% endblock %}
+function renderOptionNumList(start, end, extra) {
+    var list = "";
+    var text = "";
+    for (var i=start; i<=end; i++) {
+        if (extra != undefined && extra[""+i] != undefined) {
+            text =  extra[""+i];
+        } else {
+            text = i;
+        };
+        list += '<option value="'+i+'">'+text+'</option>';
+    };
+    return list
+};
+
+function renderTranscoderItem(data) {
+    var value;
+    var retVal = "<div class='well well-small'><div class='row'><h5 class='center-text'>{% trans %}From{% endtrans %} : </h5>";
+    retVal += "<div class='row'>";
+    value = (data.inputProtocol.comment != undefined) ? data.inputProtocol.comment : data.inputProtocol.value;
+    retVal += "<div class='col-md-3'>{% trans %}Protocol{% endtrans %}  <span class='badge badge-info'>"+value+"</span></div>";
+    value = (data.inputId.comment != undefined) ? data.inputId.comment : data.inputId.value;
+    retVal += "<div class='col-md-3'>{% trans %}ID{% endtrans %}  <span class='badge badge-info'>"+value+"</span></div>";
+    value = (data.inputSubtype.comment != undefined) ? data.inputSubtype.comment : data.inputSubtype.value;
+    retVal += "<div class='col-md-3'>{% trans %}Subtype{% endtrans %}  <span class='badge badge-info'>"+value+"</span></div>";
+    value = (data.inputQualifier.comment != undefined) ? data.inputQualifier.comment : data.inputQualifier.value;
+    retVal += "<div class='col-md-3'>{% trans %}Qualifier{% endtrans %}  <span class='badge badge-info'>"+value+"</span></div>";
+    retVal += "</div></div>";
+
+    retVal += "<div class='row'><h5 class='center-text'>{% trans %}To{% endtrans %} : </h5>";
+    retVal += "<div class='row'>";
+    value = (data.outputProtocol.comment != undefined) ? data.outputProtocol.comment : data.outputProtocol.value;
+    retVal += "<div class='col-md-3'>{% trans %}Protocol{% endtrans %}  <span class='badge badge-info'>"+value+"</span></div>";
+    value = (data.outputId.comment != undefined) ? data.outputId.comment : data.outputId.value;
+    retVal += "<div class='col-md-2'>{% trans %}ID{% endtrans %}  <span class='badge badge-info'>"+value+"</span></div>";
+    value = (data.outputAction.comment != undefined) ? data.outputAction.comment : data.outputAction.value;
+    retVal += "<div class='col-md-2'>{% trans %}Action{% endtrans %}  <span class='badge badge-info'>"+value+"</span></div>";
+    if (data.outputAction.value == '2') {retVal += "<div class='col-md-2'>{% trans %}Value{% endtrans %}  <span class='badge badge-info'>"+data.outputDimValue.value+" %</span></div>";};
+    value = (data.outputBurst.comment != undefined) ? data.outputBurst.comment : data.outputBurst.value;
+    retVal += "<div class='col-md-2'>{% trans %}Burst{% endtrans %}  <span class='badge badge-info'>"+value+"</span></div>";
+    value = (data.outputQualifier.comment != undefined) ? data.outputQualifier.comment : data.outputQualifier.value;
+    retVal += "<div class='col-md-2'>{% trans %}Qualifier{% endtrans %}  <span class='badge badge-info'>"+value+"</span></div>";
+    retVal += "</div></div></div>";
+    return retVal;
+};
+
+function renderBlockTranscoderList(data) {
+    transcoderData = data.content.transcoder;
+    var list = "<ul class='list-group'>";
+    var count = 0;
+    var recordList = {};
+    for (var i=0; i<=31; i++) {
+        recordList[i] = i + " ({% trans %}create{% endtrans %})";
+    };
+    for (item in data.content.transcoder) {
+        list += "<li class='list-group-item'><h4> Record :  <span class='badge badge-success'>"+item+"</span>  " + data.content.transcoder[item].reminder.value +"</h4> "+ renderTranscoderItem(data.content.transcoder[item]) +
+            "</li>";
+        recordList[item] = item + " ({% trans %}edit{% endtrans %})";
+        count += 1;
+    };
+    list += "</ul>";
+    if (count == 0) {
+        list = "<h5>{% trans %}There is no transcoder recorded{% endtrans %}</h5>";
+    } else {
+        $("#recordNum").html(renderOptionNumList(0,31, recordList));
+    };
+    $("#transcodList").html(list);
+    $("#count_transcode").text(count);
+};
+
+    $( document ).ready(function() {
+        $("#recordNum").html(renderOptionNumList(0,31));
+        $("#srcAddrPsa2").html(renderOptionNumList(1,16));
+        $("#outAddrPsa2").html(renderOptionNumList(1,16));
+        $("#recordNum").change(function(event) {
+            if (transcoderData[this.value] != undefined) {
+                $("#recordNum-ic").removeClass("glyphicon-plus").addClass("glyphicon-pencil");
+                var item = transcoderData[this.value];
+                $("#userComment").val(item.reminder.value);
+                $("#srcprotocols").val(item.inputProtocol.comment);
+                if (item.inputId.comment == undefined) {
+                    $("[id^='srcOptAddr_psa']").addClass('hidden');
+                    $("#srcAddrPsa1").val("");
+                    $("#srcAddrPsa2").val("");
+                    $("[id^='srcOptAddr_id']").removeClass('hidden')
+                    $("#srcAddrID").val(item.inputId.value);
+                    $("#srcAddrMode").attr('state', 'id').removeClass('btn-primary').addClass('btn-info').text("from ID");
+                } else {
+                    $("[id^='srcOptAddr_id']").addClass('hidden')
+                    $("#srcAddrID").val(item.inputId.value);
+                    $("[id^='srcOptAddr_psa']").removeClass('hidden');
+                    $("#srcAddrPsa1").val(item.inputId.comment[0]);
+                    $("#srcAddrPsa2").val(item.inputId.comment.substr(1));
+                    $("#srcAddrMode").attr('state', 'pseudo').removeClass('btn-info').addClass('btn-primary').text("Pseudo-address");
+                };
+                $("#srcSubtype").val(item.inputSubtype.value);
+                $("#srcQualifier").val(item.inputQualifier.value);
+
+                $("#outprotocols").val(item.outputProtocol.comment);
+                if (item.outputId.comment == undefined) {
+                    $("[id^='outOptAddr_psa']").addClass('hidden');
+                    $("#outAddrPsa1").val("");
+                    $("#outAddrPsa1").val("");
+                    $("[id^='outOptAddr_id']").removeClass('hidden')
+                    $("#outAddrID").val(item.outputId.value);
+                    $("#outAddrMode").attr('state', 'id').removeClass('btn-primary').addClass('btn-info').text("from ID");
+                } else {
+                    $("[id^='outOptAddr_id']").addClass('hidden')
+                    $("#outAddrID").val(item.outputId.value);
+                    $("[id^='outOptAddr_psa']").removeClass('hidden');
+                    $("#outAddrPsa1").val(item.outputId.comment[0]);
+                    $("#outAddrPsa2").val(item.outputId.comment.substr(1));
+                    $("#outAddrMode").attr('state', 'pseudo').removeClass('btn-info').addClass('btn-primary').text("Pseudo-address");
+                };
+                $("#outCmd").val(item.outputAction.comment);
+                if (item.outputAction.comment == 'DIM') {
+                    $("#outDim").val(item.outputDimValue.value);
+                } else {
+                    $("#outDim").val("");
+                };
+                $("#outBrust").val(item.outputBurst.value);
+                $("#outQualifier").val(item.outputQualifier.value);
+            } else {
+                $("#recordNum-ic").removeClass("glyphicon-pencil").addClass("glyphicon-plus");
+                $("#userComment").val("");
+                $("#srcprotocols").val("");
+                $("#srcAddrPsa1").val("");
+                $("#srcAddrPsa2").val("");
+                $("#srcAddrID").val("");
+                $("#srcSubtype").val("");
+                $("#srcQualifier").val("");
+
+                $("#outprotocols").val("");
+                $("#outAddrPsa1").val("");
+                $("#outAddrPsa1").val("");
+                $("#outAddrID").val("");
+                $("#outCmd").val("");
+                $("#outDim").val("");
+                $("#outBrust").val("");
+                $("#outQualifier").val("");
+            };
+        });
+        $("#srcMode").change(function(event) {
+            var mode = this.value;
+            switch (this.value) {
+                case 'MANUAL' :
+                    $(".source-protocol").attr('disabled', false);
+                    break;
+                case 'CAPTURE' :
+                    $(".source-protocol").attr('disabled', true);
+                    break;
+                case 'KEEP' :
+                    $(".source-protocol").attr('disabled', true);
+                    break;
+            };
+        });
+        $("#srcAddrMode").click(function(event) {
+            if  ($(this).attr('state') == 'pseudo' ) {
+                $("[id^='srcOptAddr_psa']").addClass('hidden');
+                $("[id^='srcOptAddr_id']").removeClass('hidden');
+                $(this).attr('state', 'id').removeClass('btn-primary').addClass('btn-info').text("from ID");
+            } else {
+                $("[id^='srcOptAddr_id']").addClass('hidden');
+                $("[id^='srcOptAddr_psa']").removeClass('hidden');
+                $(this).attr('state', 'pseudo').removeClass('btn-info').addClass('btn-primary').text("Pseudo-address");
+            };
+        });
+        $("#outAddrMode").click(function(event) {
+            if  ($(this).attr('state') == 'pseudo' ) {
+                $("[id^='outOptAddr_psa']").addClass('hidden');
+                $("[id^='outOptAddr_id']").removeClass('hidden');
+                $(this).attr('state', 'id').removeClass('btn-primary').addClass('btn-info').text("from ID");
+            } else {
+                $("[id^='outOptAddr_id']").addClass('hidden');
+                $("[id^='outOptAddr_psa']").removeClass('hidden');
+                $(this).attr('state', 'pseudo').removeClass('btn-info').addClass('btn-primary').text("Pseudo-address");
+            };
+        });
+        $("#transcoderSave").click(function(event) {
+            var entry = $("#recordNum").val();
+            var srcAddr = "";
+            srcProtocols = $("#srcprotocols").val();
+            if ($("#srcAddrMode").attr('state') == 'pseudo' ) {
+                srcAddr = $('#srcAddrPsa1').val();
+                srcAddr += $('#srcAddrPsa2').val();
+            } else {
+                srcAddr = " ID "+ $('#srcAddrID').val();
+            };
+            var outProtocols, outAddr;
+            outProtocols=outAddr = "";
+            outProtocols = $("#outprotocols").val();
+            outCmd = $("#outCmd").val();
+            if ($("#outAddrMode").attr('state') == 'pseudo' ) {
+                outAddr = $('#outAddrPsa1').val();
+                outAddr += $('#outAddrPsa2').val();
+            } else {
+                outAddr = " ID "+ $('#outAddrID').val();
+            };
+            if (entry != "" && outProtocols != "" && outAddr != ""  && outCmd != "") {
+                sendRequest("rfplayer.client.settranscoder", {'rfplayerID': activeDongle,'mode': $("#srcMode").val(), 'entry': entry,
+                                                                'srcProtocols': $("#srcprotocols").val(),'srcAddr': srcAddr,
+                                                                'srcSubtype': $('#srcSubtype').val(), 'srcQualifier': $('#srcQualifier').val(),
+                                                                'outProtocols': outProtocols, 'outCmd': outCmd, 'outAddr': outAddr,
+                                                                'outDim': $('#outDim').val(), 'outQualifier': $('#outQualifier').val(),
+                                                                'outBrust': $('#outBrust').val(), 'comment': $('#userComment').val()},
+                                        function(data, result) {
+                    if (result == "error" || data.content.error != "") {
+                        new PNotify({
+                            type: 'error',
+                            title: '{% trans %}RFPLayer set transcoder entry{% endtrans %}' + entry,
+                            text: data.content.rfplayerID + " :" + data.content.error,
+                            delay: 6000
+                        });
+                    } else {
+                        new PNotify({
+                            type: 'success',
+                            title: '{% trans %}RFPLayer set transcoder entry{% endtrans %} ' + entry,
+                            text: '{% trans %}Sended to{% endtrans %} '+data.content.rfplayerID,
+                            delay: 6000
+                        });
+                    };
+                });
+            };
+
+        });
+    var ws_onmessage_rfplayer_trancoder = ws.onmessage;
+    ws.onmessage = function(e) {
+        ws_onmessage_rfplayer_trancoder(e);
+        var data = JSON.parse(e.data);
+        var msgId = data.msgid.split(".");
+        if (msgId[0] == "rfplayer") {
+            if (msgId[1] == "client") {
+                switch (msgId[2]) {
+                    case "state" :
+                        if (data.content.rfplayerID == activeDongle) {
+                            renderBlockTranscoderList(data);
+                        };
+                        break;
+                };
+            };
+        };
+    };
+    });
+
+</script>
+
+{% endblock %}

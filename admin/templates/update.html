@@ -94,8 +94,15 @@ $(document).ready( function() {
 				// Do stuff on onload, use fr.result for contents of file
             $( '#firmware' ).text(fr.result);
             var lines = fr.result.split('\n');
-            if (lines[0].search("ZIAUU ") == 0 && lines[1].search("ZIBLUE RFPLAYER ") == 0) {
-                rev = lines[1].split(" ")[2];
+            var rev = false;
+            if (lines[0].search("ZIAUU ") == 0) {
+                if (lines[0].search("ZIBLUE RFPLAYER ") > 6) {
+                    rev = lines[0].split(" ")[4];
+                } else if (lines[1].search("ZIBLUE RFPLAYER ") == 0) {
+                    rev = lines[1].split(" ")[2];
+                }
+            }
+            if (rev != false) {
                 $("#firmRev").removeClass("alert-info alert-danger").addClass("alert-success").html("<h4>{% trans %}Recognized firmware revision{% endtrans %} : <b>"+rev+"</b></h4>");
                 $("#FirmwareFile").removeClass("btn-primary btn-danger").addClass("btn-success");
                 $("#btStartUpdateF").show();

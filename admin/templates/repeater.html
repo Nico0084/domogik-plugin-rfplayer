@@ -1,10 +1,14 @@
 {% block content %}
 
 <div class='container-fluid'>
-    <h3>{% trans %}RFPlayer dongle repeater not available in this version{% endtrans %}</h3>
-    <pre>
-        {{ manager|safe }}
-    </pre>
+    <h3>{% trans %}Repeater administration{% endtrans %}</h3>
+    <div id='emission-cont' class='container-fluid'>
+    <div class='panel panel-default'>
+    <div class='panel-heading' data-toggle='tooltip' data-placement='top' title='{% trans %}Select activate protocols for repeater{% endtrans %}'>
+        <h4>{% trans %}Protocols status{% endtrans %}</h4>
+    </div>
+    <div class='panel-body' id='repeater_protocols'>
+    </div>
 </div>
 
- {% endblock %}
+{% endblock %}

@@ -1,10 +1,189 @@
 {% block content %}
 
 <div class='container-fluid'>
-    <h3>{% trans %}RFPlayer dongle emission{% endtrans %}</h3>
-    <pre>
-        {{ manager|safe }}
-    </pre>
+    <h3>{% trans %}Emission administration{% endtrans %}</h3>
+    <div id='emission-cont' class='container-fluid'>
+    <div class='panel panel-default'>
+    <div class='panel-heading' data-toggle='tooltip' data-placement='top' title='{% trans %}Set command parameters{% endtrans %}'>
+        <div class="row">
+            <div class="col-md-6">
+                <h4>{% trans %}Command to send{% endtrans %}</h4>
+            </div>
+            <div class="col-md-6">
+                    <button id="sendcmdprotocol" class="btn btn-info">
+                        <span class="glyphicon glyphicon-send">
+                        </span> {% trans %}Send{% endtrans %}
+                    </span>
+            </div>
+        </div>
+    </div>
+    <div class='panel-body' id='emission_command'>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="cmdprotocols">{% trans %}Protocols{% endtrans %} :</label>
+                    <select class="form-control" id="cmdprotocols">
+                        <option value="unknown">{% trans %}No protocols detected !{% endtrans %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="cmdaction">{% trans %}Action{% endtrans %} :</label>
+                    <select class="form-control" id="cmdaction">
+                        <option value="ON">ON</option>
+                        <option value="OFF">OFF</option>
+                        <option value="DIM">DIM</option>
+                        <option value="ASSOC">ASSOC ({% trans %}Pairing dongle with appliance){% endtrans %})</option>
+                        <option value="DISSOC">DISSOC ({% trans %}Unpairing dongle from appliance){% endtrans %})</option>
+                        <option value="ASSOC_OFF">ASSOC OFF ({% trans %}Useful to fill one entry ‘OFF’ of PARROT{% endtrans %})</option>
+                        <option value="DISSOC_OFF">DISSOC OFF ({% trans %}Useful to unfill one entry ‘OFF’ of PARROT{% endtrans %})</option>
+                        <option value="ALL_ON">ALL OFN ({% trans %}Only X10/CHACON{% endtrans %})</option>
+                        <option value="ALL_OFF">ALL OFF ({% trans %}Only X10/CHACON{% endtrans %})</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="cmdaddrmode" style="display:block;">{% trans %}Select addressing mode{% endtrans %} :</label>
+                    <button class="btn btn-primary" type="button" id="cmdaddrmode" state='pseudo'>Pseudo-address</button>
+                </div>
+            </div>
+
+            <div class="col-md-4" id='cmdOptAddr_psa-1'>
+                <div class="form-group">
+                    <label for="cmdaddrpsa1">{% trans %}House code{% endtrans %} :</label>
+                    <select class="form-control" id="cmdaddrpsa1" placeholder="{% trans %}Select the house code{% endtrans %}">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="G">G</option>
+                        <option value="H">H</option>
+                        <option value="I">I</option>
+                        <option value="J">J</option>
+                        <option value="K">K</option>
+                        <option value="L">L</option>
+                        <option value="M">M</option>
+                        <option value="N">N</option>
+                        <option value="O">O</option>
+                        <option value="P">P</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4" id='cmdOptAddr_psa-2'>
+                <div class="form-group">
+                    <label for="cmdaddrpsa2">{% trans %}CodeUnit{% endtrans %} :</label>
+                    <select class="form-control" id="cmdaddrpsa2" placeholder="{% trans %}Select the unit code{% endtrans %}">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 hidden" id='cmdOptAddr_id'>
+                <label for="cmdaddress_id">{% trans %}Address ID{% endtrans %} :</label>
+                <div class="input-group">
+                    <span class="input-group-addon">ID :</span>
+                    <input type="text" class="form-control input-sm" id="cmdaddress_id" placeholder="{% trans %}Direct number between 0 and 255{% endtrans %}">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <h5 class="text-center">Optional parameters</h5>
+            <div class="well well-sm">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="cmdbrust">{% trans %}Burst{% endtrans %} :</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control input-sm" id="cmdbrust" placeholder="{% trans %}Number of bursts{% endtrans %}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="cmdqualifier">{% trans %}Qualifier{% endtrans %} :</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control input-sm" id="cmdqualifier" placeholder="{% trans %}Eg: shutter (0) or portal (1) for Somfy RTS{% endtrans %}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="cmddim">{% trans %}DIM{% endtrans %}% :</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control input-sm" id="cmddim" placeholder="{% trans %}Dimming value for DIM command{% endtrans %}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
- {% endblock %}
+<script type="text/javascript">
+
+    $( document ).ready(function() {
+        $("#cmdaddrmode").click(function(event){
+            if  ($(this).attr('state') == 'pseudo' ) {
+                $("[id^='cmdOptAddr_psa']").addClass('hidden');
+                $("[id^='cmdOptAddr_id']").removeClass('hidden');
+                $(this).attr('state', 'id').removeClass('btn-primary').addClass('btn-info').text("from ID");
+            } else {
+                $("[id^='cmdOptAddr_id']").addClass('hidden');
+                $("[id^='cmdOptAddr_psa']").removeClass('hidden');
+                $(this).attr('state', 'pseudo').removeClass('btn-info').addClass('btn-primary').text("Pseudo-address");
+            };
+        });
+
+        $("#sendcmdprotocol").click(function (r) {
+            var protocol = $("#cmdprotocols").val();
+            var action = $("#cmdaction").val();
+            if  ($("#cmdaddrmode").attr('state') == 'pseudo' ) {
+                var address = $("#cmdaddrpsa1").val()+$("#cmdaddrpsa2").val();
+            } else {
+                var address = 'ID '+$("#cmdaddress_id").val();
+            };
+            var burst = $("#cmdbrust").val();
+            var qualifier = $("#cmdqualifier").val();
+            var dim = $("#cmddim").val();
+            if (protocol != undefined && protocol != "unknown" && action  != undefined  && address != undefined && address != "") {
+                sendRequest("rfplayer.client.cmdaction", {'rfplayerID': activeDongle,'protocol': protocol, 'action': action,'address': address,
+                                                                'burst': burst, 'qualifier': qualifier, 'dim': dim},
+                                        function(data, result) {
+                    if (result == "error" || data.content.error != "") {
+                        new PNotify({
+                            type: 'error',
+                            title: '{% trans %}RFPLayer command action{% endtrans %}',
+                            text: data.content.rfplayerID + " :" + data.content.error,
+                            delay: 6000
+                        });
+                    } else {
+                        new PNotify({
+                            type: 'success',
+                            title: '{% trans %}RFPLayer command action{% endtrans %}',
+                            text: '{% trans %}Sended to{% endtrans %} '+data.content.rfplayerID,
+                            delay: 6000
+                        });
+                    };
+                });
+            };
+        });
+    });
+
+</script>
+
+{% endblock %}

@@ -46,6 +46,7 @@ try:
     from domogikmq.message import MQMessage
 
     from domogik_packages.plugin_rfplayer.lib.rfplayer import RFPManager
+    import tailer
     import sys
     import os
     import traceback
@@ -107,7 +108,7 @@ class RFPlayer(Plugin):
         action = msg.get_action().split(".")
         if action[0] == 'rfplayer' :
             handled = False
-            self.log.debug(u"Handle MQ request action <{0}>.".format(action))
+            self.log.debug(u"Handle MQ request action {0}.".format(action))
             if action[1] in ["manager", "client"] :
                 handled = True
                 data = msg.get_data()
@@ -120,8 +121,19 @@ class RFPlayer(Plugin):
                 self.reply(reply_msg.get())
                 if "ack" in data and data['ack'] == "pub":
                     self.publishMsg("{0}.{1}.{2}".format(action[0], action[1], action[2]), report)
+            elif action[1] == "plugin" :
+                if action[2] == 'getlog' :
+                    handled = True
+                    data = msg.get_data()
+                    report = self.getLoglines(data)
+                    # send the reply
+                    reply_msg = MQMessage()
+                    reply_msg.set_action("{0}.{1}.{2}".format(action[0], action[1], action[2]))
+                    for k, item in report.items():
+                        reply_msg.add_data(k, item)
+                    self.reply(reply_msg.get())
             if not handled :
-                self.log.warning(u"MQ request unknown action <{0}>.".format(action))
+                self.log.warning(u"MQ request unknown action {0}.".format(action))
         elif action[0] == "client" and action[1] == "cmd" :
             # action on dmg device
             data = msg.get_data()
@@ -179,6 +191,32 @@ class RFPlayer(Plugin):
     def publishMsg(self, category, content):
         self._pub.send_event(category, content)
         self.log.debug(u"Publishing over MQ <{0}>, data : {1}".format(category, content))
+
+    def publishRawData(self, category, content):
+        self._pub.send_event(category, content)
+
+    def getLoglines(self, message):
+        """Renvoi les lignes Start à End du fichier de log."""
+        retval = {'error': ""}
+        try :
+            if 'lines' in message:
+                lines = int(message['lines'])
+        except :
+            lines = 50
+        try:
+            for h in self.log.__dict__['handlers']:
+                if h.__class__.__name__ in ['FileHandler', 'TimedRotatingFileHandler','RotatingFileHandler', 'WatchedFileHandler']:
+                    filename = h.baseFilename
+
+            if message['from'] == 'top':
+                retval['data'] = tailer.head(open(filename), lines)
+            elif message['from'] == 'end':
+                retval['data'] = tailer.tail(open(filename), lines)
+            else: return {'error': "No from direction define."}
+        except:
+                retval['error'] = "Exception : %s" % (traceback.format_exc())
+                self._log.error("Get log lines : " + retval['error'])
+        return retval
 
 if __name__ == "__main__":
     RFPlayer()

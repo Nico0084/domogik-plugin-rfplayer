@@ -3,7 +3,12 @@
 <div class='container-fluid'>
     <h3>{% trans %}Reception administration{% endtrans %}</h3>
     <div id='reception-cont' class='container-fluid'>
+    <div class='panel panel-default'>
+    <div class='panel-heading' data-toggle='tooltip' data-placement='top' title='{% trans %}Select activate protocols for reception{% endtrans %}'>
+        <h4>{% trans %}Protocols status{% endtrans %}</h4>
+    </div>
+    <div class='panel-body' id='reception_protocols'>
     </div>
 </div>
 
- {% endblock %}
+{% endblock %}

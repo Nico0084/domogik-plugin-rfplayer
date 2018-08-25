@@ -1,10 +1,143 @@
 {% block content %}
 
 <div class='container-fluid'>
-    <h3>{% trans %}RFPlayer dongle system{% endtrans %}</h3>
-    <pre>
-        {{ manager|safe }}
-    </pre>
+    <h3>{% trans %}System administration{% endtrans %}</h3>
+    <div id='general-cont' class='container-fluid'>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="cmdformat">{% trans %}Format{% endtrans %} :</label>
+                    <select class="form-control" id="cmdformat">
+                        <option value="OFF">OFF ({% trans %}shutdowns incoming RF frames to USB port{% endtrans %})</option>
+                        <option value="JSON">JSON ({% trans %}plugin format{% endtrans %})</option>
+                        <option value="XML">XML ({% trans %}not handle by plugin{% endtrans %})</option>
+                        <option value="TEXT">TEXT ({% trans %}not handle by plugin{% endtrans %})</option>
+                        <option value="HEXA">HEXA ({% trans %}not handle by plugin{% endtrans %})</option>
+                        <option value="HEXA FIXED">HEXA FIXED ({% trans %}not handle by plugin{% endtrans %})</option>
+                        <option value="BINARY">BINARY ({% trans %}not handle by plugin{% endtrans %})</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label for="cmdline">{% trans %}Command line{% endtrans %} :</label>
+                <div class="input-group">
+                    <input type="text" class="form-control input-sm" id="cmdline" placeholder="{% trans %}Command system{% endtrans %}...">
+                    <span class="input-group-addon">
+                        <span id="sendcmdline" class="btn btn-xs btn-info">
+                            <span class="glyphicon glyphicon-send">
+                            </span>
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                <div class='row'>
+                    <div class='col-md-4'>
+                        <h4>{% trans %}Dialog flow{% endtrans %}</h4>
+                    </div>
+                    <div class='col-md-4'>
+                        <div class='checkbox'>
+                            <label><input type='checkbox' id='unableFlow' value='flow'>{% trans %}Activate{% endtrans %}</label>
+                        </div>
+                    </div>
+                    <div class='col-md-4'>
+                        <button type="button" class="btn btn-default center-block" id="btClearFlow" onclick="$('#systemflow_log')[0].value=''">
+                            <i class="fa fa-eraser icon-info" aria-hidden="true"></i><span> {% trans %}Clear{% endtrans %}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class='panel-body' id='sysinfo'>
+                <textarea  id='systemflow_log' style="height:500px;overflow:auto;resize: none;" readonly></textarea >
+            </div>
+        </div>
+    </div>
 </div>
+
+<script type="text/javascript">
+
+function renderBlockSystem(data){
+    $("#unableFlow").prop('checked', data.flowReport);
+    };
+
+    $("#unableFlow").click(function (r) {
+        sendRequest("rfplayer.client.toggleflow", {"rfplayerID": activeDongle}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: '{% trans %}RFPLayer dialog flow{% endtrans %}',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                $("#unableFlow").prop('checked', data.content.state);
+            };
+        });
+    });
+
+    $( document ).ready(function() {
+        var ws_onmessage_system = ws.onmessage;
+        ws.onmessage = function(e) {
+            ws_onmessage_system(e);
+            var data = JSON.parse(e.data);
+            var msgId = data.msgid.split(".");
+            if (msgId[0] == "rfplayer") {
+                if (msgId[1] == "client") {
+                    if (msgId[2] == "rawdata") {
+                        $('#systemflow_log')[0].value += data.content.raw;
+                        $('#systemflow_log').scrollTop($('#systemflow_log')[0].scrollHeight);
+                    };
+                };
+            };
+        };
+
+        $("#sendcmdline").click(function (r) {
+            var cmdLine = $("#cmdline").val();
+            if (cmdLine != undefined && cmdLine != "") {
+                sendRequest("rfplayer.client.cmdline", {"rfplayerID": activeDongle, "cmdline": cmdLine}, function(data, result) {
+                    if (result == "error" || data.result == "error") {
+                        new PNotify({
+                            type: 'error',
+                            title: '{% trans %}RFPLayer command line{% endtrans %}',
+                            text: data.content.rfplayerID + " :" + data.content.error,
+                            delay: 6000
+                        });
+                    } else {
+                        new PNotify({
+                            type: 'success',
+                            title: '{% trans %}RFPLayer command line{% endtrans %}',
+                            text: '{% trans %}Sended to{% endtrans %} '+data.content.rfplayerID,
+                            delay: 6000
+                        });
+                    };
+                });
+            };
+        });
+        $("#cmdformat").change(function (r) {
+            var cmdLine = $("#cmdformat").val();
+            if (cmdLine != undefined && cmdLine != "") {
+                sendRequest("rfplayer.client.cmdformat", {"rfplayerID": activeDongle, "cmdformat": cmdLine}, function(data, result) {
+                    if (result == "error" || data.result == "error") {
+                        new PNotify({
+                            type: 'error',
+                            title: '{% trans %}RFPLayer set format{% endtrans %}',
+                            text: data.content.rfplayerID + " :" + data.content.error,
+                            delay: 6000
+                        });
+                    } else {
+                        new PNotify({
+                            type: 'success',
+                            title: '{% trans %}RFPLayer set format{% endtrans %}',
+                            text: '{% trans %}Sended to{% endtrans %} '+data.content.rfplayerID,
+                            delay: 4000
+                        });
+                    };
+                });
+            };
+        });
+    });
+</script>
 
  {% endblock %}

@@ -158,9 +158,18 @@
 
 <script type="text/javascript">
 
+    function ordered(data){
+        const order = {};
+        Object.keys(data).sort().forEach(function(key) {
+          order[key] = data[key];
+        });
+        return order;
+    };
+
     var activeDongle = "{{ dongle_active }}";
     var donglemenu_active = "{{ donglemenu_active }}";
     var clientID = "{{ clientid }}";
+    var transcoderData = {};
  //   console.log("{{ manager|safe }}")
     /* Action which shows and hides div with a id */
     $("[id^='toggle-OZWconfig']").click(function() {
@@ -168,6 +177,24 @@
       toggleVisible(target_selector, this.id);
       return false;
     });
+
+    function getStateTitle(dongleInfos){
+        var title = 'Undefined';
+        switch (dongleInfos.state) {
+            case 'dead' :
+                title = dongleInfos.error;
+                break;
+            case 'starting' :
+                title = "{% trans %}Dongle starting{% endtrans %}";
+                break;
+            case 'alive' :
+                break;
+                title = "{% trans %}Dongle in line{% endtrans %}";
+            case 'stopped' :
+                title = "{% trans %}Dongle stopped{% endtrans %}";
+        };
+        return title;
+    };
 
     function toggleVisible(target_selector, icon_selector) {
       var $target = $("[id^='"+target_selector+"']" );
@@ -189,81 +216,19 @@
       };
     };
 
-    function setCtrlStatusHtml(ctrl) {
-        var htmlCtrl = $("#ctrl-info_"+ctrl.rfplayerID);
-        if (htmlCtrl.length == 0) {
-            $("<h2 id='ctrl-info_"+ctrl.rfplayerID+"'></h2>").insertAfter("#manager-info");
-            htmlCtrl = $("#ctrl-info_"+ctrl.rfplayerID);
-        };
-        var contentHtml = "";
-        var error = '';
-        var icon = ' fa-smile-o';
-        var iconColor = ' icon-success';
-        var info = '';
-        if (ctrl.error != undefined && ctrl.error != '') {
-            error = "<p class='marge'>- "+ctrl.error+"</p>";
-            iconColor = " icon-danger";
-        };
-        if (ctrl.init != undefined && ctrl.init != '') {
-            init = "<p class='marge'>- "+ctrl.init+"</p>";
-        };
-        if (ctrl.status == 'dead') {
-            icon = ' fa-exclamation-circle';
-            info = "<p class='marge'>- {% trans %}Check openzwave and plugin log file{% endtrans %}.</p>";
-        } else if (ctrl.status == 'alive') {
-            info =  "<p class='marge'>- {% trans %}You can use full access on left menu{% endtrans %}.</p>";
-        } else if (ctrl.status == 'starting') {
-            if (ctrl.init != undefined && ctrl.init.search('Opening') == -1)  {
-                info = "<p class='marge'>- {% trans %}Discovery of nodes, be patient{% endtrans %} ...</p>";
-            };
-            if (ctrl.init != undefined && (ctrl.init.search('In progress') != -1 || ctrl.init.search('ready') != -1))  {
-                info += "<p class='marge'>- {% trans %}You can already use full access on left menu{% endtrans %}.</p>";
-            };
-        } else if (ctrl.status == 'stopped') {
-            icon = ' fa-stop';
-            iconColor = " icon-danger";
-            info = "<p class='marge'>- {% trans %}Stopped{% endtrans %}.</p>"
-        } else {
-            icon = ' fa-question-circle';
-            iconColor = " icon-warning";
-            info = "<p class='marge'>- {% trans %}Unknown status{% endtrans %}: "+ ctrl.status +"</p>";
-        };
-        contentHtml = "<i class='fa"+icon+iconColor+"'></i> {% trans %}Zwave controller{% endtrans %} "+ctrl.rfplayerID+" - "+ctrl.HomeID+
-                             init + info + error;
-        $(htmlCtrl).html(contentHtml);
-    };
-
     function selectActiveRFPlayer(rfplayerID) {
         sidebarVisible('dongle-menu', true);
-        activeDongle = rfplayerID;
+        if (activeDongle != rfplayerID) {
+            activeDongle = rfplayerID;
+            window.location.href = "/plugin_rfplayer/{{ clientid }}#"+activeDongle;
+        };
     };
 
-    $("[id^='saveconf_']").click(function() {
-        var rfplayerID = this.id.split("_")[1];
-        $("#icsaveconf_" + rfplayerID).removeClass("glyphicon-floppy-save glyphicon-floppy-saved").addClass("glyphicon-hourglass");
-        sendRequest("ozwave.ctrl.saveconf", { "rfplayerID": rfplayerID }, function(data, result) {
-            if (data.content.result == "error") {
-                new PNotify({
-                    type: 'error',
-                    title: 'Fail to save config file',
-                    text: data.content.error,
-                    delay: 6000
-                });
-            } else {
-                new PNotify({
-                    type: 'success',
-                    title: 'Config file saved',
-                    text: data.content.msg,
-                    delay: 4000
-                });
-            };
-            updateBtSavedConf(data.content.rfplayerID, data.content.saved);
-        });
-    });
+
     $("#refrechdevList").click(function() {
         var rfplayerID = this.id.split("_")[1];
         $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh fa-spin");
-        sendRequest("ozwave.manager.refreshdeviceslist", {}, function(data, result) {
+        sendRequest("rfplayer.manager.refreshdeviceslist", {}, function(data, result) {
             if (result == "error" || data.content.error != "") {
                 $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh");
                 new PNotify({
@@ -311,7 +276,6 @@
                     } else if (data.content.event == "alive") {
                         if (!$("#manager-info i").hasClass('icon-success')) {
                             $("#manager-info").html("<i class='fa fa-smile-o icon-success'></i> {{ manager.rfPlayers|length }} {% trans %}RFPlayer detected{% endtrans %}");
-                            $("[id^='ctrl-tab_']").removeClass().addClass("label status-starting").attr("data-original-title","{% trans %}Dongle starting{% endtrans %}");
                         };
                     };
                 };
@@ -327,20 +291,7 @@
                                 var tabNew = "";
                                 for (item in data.content.rfPlayers) {
                                     var ctrl_tab = $("[id^='ctrl-tab_"+data.content.rfPlayers[item].rfplayerID+"']"),
-                                        title;
-                                    switch (data.content.rfPlayers[item].state) {
-                                        case 'dead' :
-                                            title = "{% trans %}Dongle not in line{% endtrans %}";
-                                            break;
-                                        case 'starting' :
-                                            title = "{% trans %}Dongle starting{% endtrans %}";
-                                            break;
-                                        case 'alive' :
-                                            break;
-                                            title = "{% trans %}Dongle in line{% endtrans %}";
-                                        case 'stopped' :
-                                            title = "{% trans %}Dongle stopped{% endtrans %}";
-                                    };
+                                         title = getStateTitle(data.content.rfPlayers[item]);
                                     if (ctrl_tab.length == 0) {
                                          tabNew = "<li> <a data-toggle='tab' href='#" + data.content.rfPlayers[item].rfplayerID +"' onclick=" +
                                                 "'selectActiveRFPlayer(" + '"' + data.content.rfPlayers[item].rfplayerID + '"' + ");return true;'" +
@@ -385,25 +336,16 @@
                     case "client" :
                             switch (msgId[2]) {
                                 case "state" :
-                                    if ((data.content.type == 'change') || (data.content.type == 'status')) {
-                                        $("[id^='ctrl-tab_"+data.content.rfplayerID+"']").removeClass().addClass("label status-" + data.content.state).attr("data-original-title",data.content.init);
-                                        $("[id^='ctrl-tab_"+data.content.rfplayerID+"']").text(data.content.rfplayerID);
-                                        var error = '';
-                                        if (data.content.HomeID != null) {
-                                            updateBtSavedConf(data.content.rfplayerID, data.content.saved);
-                                        };
-                                        if (data.content.status == "dead") {
-                                                new PNotify({
-                                                type: 'error',
-                                                title: data.content.value,
-                                                text: data.content.usermsg,
-                                                delay: 6000
-                                            });
-                                            $("#manager-init").text(data.content.rfplayerID+': '+data.content.usermsg);
-                                            error = data.content.usermsg;
-                                        };
-                                        setCtrlStatusHtml({'rfplayerID': data.content.rfplayerID, 'HomeID': data.content.HomeID, 'init' : data.content.usermsg,
-                                                                'status': data.content.status, 'error': error, 'Model': ''});
+                                    var title = getStateTitle(data.content);
+                                    $("[id^='ctrl-tab_"+data.content.rfplayerID+"']").removeClass().addClass("label status-" + data.content.state).attr("data-original-title",title);
+                                    $("[id^='ctrl-tab_"+data.content.rfplayerID+"']").text(data.content.rfplayerID);
+                                    if (data.content.state == "dead") {
+                                        new PNotify({
+                                            type: 'error',
+                                            title: data.content.rfplayerID + ' {% trans %}connection fail{% endtrans %}',
+                                            text: data.content.error,
+                                            delay: 6000
+                                        });
                                     };
                                     if (data.content.type == 'hard-reset') {
                                         new PNotify({
@@ -413,70 +355,6 @@
                                                     delay: 8000
                                         });
                                         $("#dongle-process-running").addClass("hide");
-                                    };
-                                    break;
-                                case "saveconf":
-                                    if (data.content.result == "error") {
-                                        new PNotify({
-                                            type: 'error',
-                                            title: 'Fail to save config file',
-                                            text: data.content.error,
-                                            delay: 6000
-                                        });
-                                    } else {
-                                        new PNotify({
-                                            type: 'success',
-                                            title: 'Config file saved',
-                                            text: data.content.msg,
-                                            delay: 4000
-                                        });
-                                    };
-                                    updateBtSavedConf(data.content.rfplayerID, data.content.saved);
-                                    break;
-                                case "saveconfchange":
-                                    if ( updateBtSavedConf(data.content.rfplayerID, data.content.saved) && !data.content.saved ) {
-                                        new PNotify({
-                                            type: 'info',
-                                            title: 'ZWave network '+ data.content.rfplayerID +' config change',
-                                            text: 'Save config file to keep your change.',
-                                            delay: 6000
-                                        });
-                                    };
-                                    break;
-                                case "opening":
-                                    new PNotify({
-                                        type: 'info',
-                                        title: 'ZWave controller',
-                                        text: 'Network '+ data.content.rfplayerID +' opening driver '+ data.content.Driver,
-                                        delay: 6000
-                                    });
-                                    $("#manager-init").text('Opening driver '+data.content.Driver);
-                                    var ctrl_tab = $("[id^='ctrl-tab_"+data.content.rfplayerID+"']");
-                                    if (ctrl_tab.length != 0) {
-                                        ctrl_tab.removeClass().addClass("label status-starting").attr("data-original-title", "{% trans %}Opening controller{% endtrans %}");
-                                    };
-                                    break;
-                                case "closed":
-                                    new PNotify({
-                                        type: 'info',
-                                        title: 'ZWave controller',
-                                        text: 'Network '+ data.content.rfplayerID +' driver '+ data.content.Driver+' closed.',
-                                        delay: 6000
-                                    });
-                                    $("#manager-init").text('Driver '+data.content.Driver+' closed.');
-                                    var ctrl_tab = $("[id^='ctrl-tab_"+data.content.rfplayerID+"']");
-                                    if (ctrl_tab.length != 0) {
-                                        ctrl_tab.removeClass().addClass("label status-stopped").attr("data-original-title", "{% trans %}Controller is stopped{% endtrans %}");
-                                    };
-                                    break;
-                                case "command" :
-                                    if (data.content.state == "Error") {
-                                        new PNotify({
-                                            type: 'error',
-                                            title: 'ZWave '+ data.content.rfplayerID +' controller error',
-                                            text: 'Command : '+data.content.command+' <br>'+data.content.usermsg+'<br>Error : '+data.content.error,
-                                            delay: 6000
-                                        });
                                     };
                                     break;
                             };

@@ -2,6 +2,18 @@
 Changelog
 =========
 
+0.1.2 (25-08-2018)
+------------------
+
+* Compatibility with RPF1000 firmware 1.32
+* Add JAMMING protocol and domogik device.
+* Big work on advanced admin (not finish)
+* Add monitoring mode.
+* Improve serial com status.
+* Add RFP1000 commands system.
+* Fix some bugs.
+* Update doc.
+
 0.1.1 (22-04-2017)
 ------------------
 

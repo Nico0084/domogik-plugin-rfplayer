@@ -16,11 +16,19 @@ RF_PROTOCOLS = {"0" : {"name": "UNKNOWN", "freq": [], "infotype": []},
                 "8" : {"name": "X2D_SHUTTER", "freq": ["868"], "infotype": ["10", "11"]},
                 "9" : {"name": "X2D_HA_ELEC", "freq": ["868"], "infotype": ["3"]},
                 "10": {"name": "X2D_HA_GAS", "freq": ["868"], "infotype": ["1"]},
+                "11": {"name": "SOMFY_RTS", "freq": ["433"], "infotype": ["0"]},
                 "12": {"name": "BLYSS", "freq": ["433"], "infotype": ["1"]},
                 "13": {"name": "PARROT", "freq": ["433", "868"], "infotype": ["0"]},
-                "14": {"nameid": "reserved", "freq": [], "infotype": []},
+                "14": {"nameid": "FS20", "freq": ["433"], "infotype": []},
                 "15": {"name": "reserved", "freq": [], "infotype": []},
-                "16": {"name": "KD101", "freq": ["433"], "infotype": ["1"]}
+                "16": {"name": "KD101", "freq": ["433"], "infotype": ["1"]},
+                "17": {"name": "reserved", "freq": [], "infotype": []},
+                "18": {"name": "reserved", "freq": [], "infotype": []},
+                "19": {"name": "reserved", "freq": [], "infotype": []},
+                "20": {"name": "reserved", "freq": [], "infotype": []},
+                "21": {"name": "reserved", "freq": [], "infotype": []},
+                "22": {"name": "FS20", "freq": [], "infotype": ["1", "14"]},
+                "23": {"name": "EDISIO", "freq": [], "infotype": ["15"]}
                 }
 
 PROTOCOLS = {"0": {"name": "UNKNOWN",
@@ -83,7 +91,11 @@ PROTOCOLS = {"0": {"name": "UNKNOWN",
                       "8": {"name": "XD2", "infotype": ["10", "11"]},
                       "9": {"name": "RTS", "infotype": ["3"]},
                       "10": {"name": "KD101", "infotype": ["1"]},
-                      "11": {"name": "PARROT", "infotype": ["0"]}
+                      "11": {"name": "PARROT", "infotype": ["0"]},
+                      "13": {"name": "TIC", "infotype": ["13"]},
+                      "14": {"name": "FS20", "infotype": ["1","14"]},
+                      "15": {"name": "JAMMING", "infotype": ["1"]},
+                      "16": {"name": "EDISIO", "infotype": ["15"]}
                     }
 
 def getInfoType(data) :
@@ -264,19 +276,19 @@ class InfoType0(InfoType) :
 
 
 class InfoType1(InfoType0) :
-    """Info Type for X10, BLYSS, CHACON, KD101 protocol"""
+    """Info Type for X10, BLYSS, CHACON, KD101, JAMMING protocol"""
 
     infoType = "1"
 
     @property
     def protocols_Id(self):
         """ Return protocols id compatibility"""
-        return ["1", "3", "4", "10"]
+        return ["1", "3", "4", "10", "15"]
 
     def get_RFP_data_to_sensor(self, sensor):
         """Return sensor value from RFP data"""
         try :
-            if sensor['reference'] in ["switch", "switch_all"] :
+            if sensor['reference'] in ["switch", "switch_all", "jamming"] :
                 if self.data['infos']['subType'] in ["0", "4"] : # 0: OFF, 4: ALL_ OFF
                     return "0"
                 elif self.data['infos']['subType'] in ["1", "5"] : # 1: ON, 5 : ALL_ ON
@@ -291,6 +303,8 @@ class InfoType1(InfoType0) :
             return [["switch", "rf_quality"]]
         elif self.data['header']['protocol'] in ["3", "10"] : # BLYSS, KD101
             return [["switch", "switch_all", "rf_quality"]]
+        elif self.data['header']['protocol'] in ["15"] : # JAMMING
+            return [["jamming"]]
         return []
 
     def get_Available_Commands(self):

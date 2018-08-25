@@ -70,11 +70,11 @@ class RFPManager(object):
         self.rfpClients = {} # list of all RFPlayer
         self.monitorClients = ManageMonitorClient(self)
         self.monitorClients.start()  # Start supervising nodes activity to helper log.
-        self._plugin.publishMsg('rfplayer.manager.state', self.getManagerInfo())
         # get the devices list
         self.refreshDevices(self._plugin.get_device_list(quit_if_no_device = False, max_attempt = 2))
         if not self.rfpClients :
             self.log.warning(u"No device RFPlayer created in domogik. Create one with admin device creation.")
+        self._plugin.publishMsg('rfplayer.manager.state', self.getManagerInfo())
         self.log.info(u"Manager RFPlayer Clients is ready.")
 
     @property
@@ -109,7 +109,7 @@ class RFPManager(object):
                 CliName = device['parameters']['dongle_id']['value']
                 client = self.getClientFromDevName(CliName)
                 if client is not None :
-                    iType = getInfoTypeFromCmd(device, k, cmd, values)
+                    iType, values = getInfoTypeFromCmd(device, k, cmd, values)
                     if iType is not None :
                         #Add device address
                         client.send_to_RFP(iType.get_cmd_to_RFP_data(k, cmd, values))
@@ -175,7 +175,7 @@ class RFPManager(object):
         """Get RFPLayer client key ids."""
         retval = []
         findId = ""
-        self.log.debug (u"getIdsClient check for device : {0}".format(idToCheck))
+#        self.log.debug (u"getIdsClient check for device : {0}".format(idToCheck))
         if isinstance(idToCheck, SerialRFP1000) :
             for clID in self.rfpClients.keys() :
                 if self.rfpClients[clID] == idToCheck :
@@ -363,7 +363,7 @@ class RFPManager(object):
 
     def processRequest(self, request, data):
         """Callback come from MQ (request with reply)"""
-        report = {'error' : u"Unknown request <{0}>, data : {1}".format(request, data)}
+        report = {'error' : u"Unknown request {0}, data : {1}".format(request, data)}
         reqRef = request.split('.')
         if reqRef[0] == 'manager' :
             if reqRef[1] == 'getstatus' :
@@ -372,16 +372,25 @@ class RFPManager(object):
             if 'rfplayerID' in data :
                 client = self.getClient(data['rfplayerID'])
                 if client is not None :
-                    if reqRef[1] == 'getinfos' :
-                        report = client.getInfos()
-                    elif reqRef[1] == 'updatefirmware' :
-                        report = client.RebuildFirmware(data)
+                    if reqRef[1] == 'start':
+                        if not client.isOpen :
+                            report['error'] = "" if client.open() else client. _error
+                        else :
+                            report['error'] = "Dongle allready started"
+                    elif reqRef[1] == 'stop':
+                        if client.isOpen :
+                            report['error'] = "" if client.close() else client. _error
+                        else :
+                            report['error'] = "Dongle allready stopped"
                     elif reqRef[1] == 'startmonitorclient':
                         report = self.monitorClients.startMonitorClient(data["rfplayerID"])
                     elif reqRef[1] == 'stopmonitorclient':
                         report = self.monitorClients.stopMonitorClient(data["rfplayerID"])
-                else : report['error'] = u"<{0}>, Unknown RFPlayer dongle, data : {1}".format(request, data)
-            else : report['error'] = u"<{0}>, Invalid data format : {1}".format(request, data)
+                    else:
+                        report = client.processRequest(reqRef[1], data)
+                else : report['error'] = u"{0}, Unknown RFPlayer dongle, data : {1}".format(request, data)
+                report['rfplayerID'] = data['rfplayerID']
+            else : report['error'] = u"{0}, Invalid data format : {1}".format(request, data)
         return report
 
     def getManagerInfo(self):
@@ -411,7 +420,10 @@ class RFPManager(object):
             else : info = {}
             info['rfplayerID'] = cId
             info.update(data)
-            self._plugin.publishMsg(category, info)
+            if category == 'rfplayer.client.rawdata':
+                self._plugin.publishRawData(category, info)
+            else :
+                self._plugin.publishMsg(category, info)
 
 class Timer():
     """

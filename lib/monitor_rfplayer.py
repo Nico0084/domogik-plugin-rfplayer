@@ -133,6 +133,14 @@ class ManageMonitorClient(threading.Thread):
                         'date': time.strftime('%Y-%m-%d %H:%M:%S.{0}'.format(repr(timestamp).split('.')[1][:3]), time.localtime(timestamp)),
                         'type': "Data for new device {0} :".format(iType.dmgDevice_Id), 'data': iType.data})
 
+    def writeData_report(self, clientID, timestamp, msg):
+        """Callback from client himself."""
+        if self.hasMonitored :
+            if self.isMonitored(clientID) :
+                self.__reports.append({'clientID': clientID,
+                                    'date': time.strftime('%Y-%m-%d %H:%M:%S.{0}'.format(repr(timestamp).split('.')[1][:3]), time.localtime(timestamp)),
+                                    'type': "Write data : ", 'data': msg})
+
     def isMonitored(self, clientID):
         """Return True if watch node."""
         return True if clientID in self.ClientsMonitor else False

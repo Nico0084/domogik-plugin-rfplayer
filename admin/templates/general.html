@@ -1,7 +1,31 @@
 {% block content %}
 
 <div class='container-fluid'>
-    <h3>{% trans %}General administration{% endtrans %}</h3>
+    <div class='row'>
+        <div class ="col-xs-9 col-md-9">
+            <h3>{% trans %}General administration{% endtrans %}</h3>
+        </div>
+        {% if not dongle_active %}
+            {% if manager.rfPlayers|length > 0 %}
+                {% set dongle_active = manager.rfPlayers[0].rfplayerID %}
+            {% endif %}
+        {% endif %}
+        {% for rfplayer in manager.rfPlayers %}
+            {% if dongle_active == rfplayer.rfplayerID %}
+                <div class="col-xs-3 col-md-3">
+                    <button class="btn btn-default center-block" id="rundongle">
+                    {% if rfplayer.state in ['alive','starting'] %}
+                        <i class="fa fa-stop" id="rundongle-ic" style="color:red"></i>
+                        <span id="rundongle-text"> Stop dongle</span>
+                    {% else %}
+                        <i class="fa fa-play" id="rundongle-ic" style="color:green"></i>
+                        <span id="rundongle-text"> Start dongle</span>
+                    {% endif %}
+                    </button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
     <div id='general-cont' class='container-fluid'>
         <div class='panel panel-default'>
             <div class='panel-heading'>
@@ -28,8 +52,12 @@
                     </div>
                 </div>
                 <div class='row'>
-                    <h4>{% trans %}Protocoles{% endtrans %}</h4>
-                    <ul id='protocoles'>
+                    <div class='col-md-4'>
+                        <h4>{% trans %}Protocols status{% endtrans %}</h4>
+                    </div>
+                </div>
+                <div class='row'>
+                    <ul id='protocols_general'>
                     <div class='col-md-4'>
                         <h5>Receiver</h5>
                         <div class='checkbox'>
@@ -51,41 +79,121 @@
                 </div>
             </div>
         </div>
-    </div>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                <h4>{% trans %}Commands system{% endtrans %}</h4>
+            </div>
+            <div class='panel-body' id='cmdsystem'>
+                <h5>{% trans %}TBD{% endtrans %}</h5>
+            </div>
+        </div    </div>
     <pre id='general-pre' style="height:500px;overflow:auto;">
         {{ manager|safe }}
     </pre>
 </div>
+
+<!-- Confirmation Cmd System -->
+<div class="modal fade" id="confirmCmdSys" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Command system confirmation</h4>
+      </div>
+      <div class="modal-body">
+        <h4>Command : <span id="cmdSys">{% trans %}Undefined{% endtrans %}</span><span> </span>
+            <span id="cmdVal">{% trans %}Undefined{% endtrans %}</span>
+        </h4>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="sendCmdSys">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
 
 function renderBlockGeneral(data){
     var html = "";
-    for (var item in data.serialParam) {
+    for (var item in ordered(data.serialParam)) {
         html += "<li><b>"+item+" :</b> "+data.serialParam[item]+"</li>";
     };
     $("#serialParams").html(html);
     html = "";
-    for (var item in data.status.systemStatus.infos) {
+    for (var item in ordered(data.status.systemStatus.infos)) {
         html += "<li><b>"+item+" :</b> "+data.status.systemStatus.infos[item].value+"</li>";
     };
     $("#systemStatus").html(html);
     html = "";
-    for (var item in data.status.systemStatus.protocoles) {
+    for (var item in ordered(data.status.systemStatus.protocols)) {
         html += "<div class='col-md-4'><h5>"+item[0].toUpperCase() + item.slice(1)+"</h5>";
-        for (var p in data.status.systemStatus.protocoles[item]) {
+        for (var p in ordered(data.status.systemStatus.protocols[item])) {
             checked = ""
-            if (data.status.systemStatus.protocoles[item][p]) {checked = "checked";};
+            if (data.status.systemStatus.protocols[item][p]) {checked = "checked";};
               html += "<div class='checkbox'>"+
-                            "<label><input type='checkbox' value='"+p+"'"+checked+">"+p+"</label>"+
+                            "<label><input type='checkbox' class='rf_protocol' onchange='toggleProtocol(this, "+'"'+item+'"'+")' value='"+p+"'"+checked+">"+p+"</label>"+
                         "</div>";
-
         };
         html += "</div>";
-    $("#protocoles").html(html);
     };
+    $("#protocols_general").html(html);
+    html = "";
+    for (var cmd in ordered(data.cmdsystem)) {
+        html += renderCmdSystem(cmd, data.cmdsystem[cmd]);
+    };
+    $("#cmdsystem").html(html);
 };
 
+$("#sendCmdSys").click(function(){
+    var cmd = $('#cmdSys').text();
+    var value = $('#cmdVal').text();
+    sendRequest("rfplayer.client.cmdsystem", {"rfplayerID": activeDongle, "cmd": cmd, "value": value}, function(data, result) {
+        if (result == "error" || data.result == "error") {
+            new PNotify({
+                type: 'error',
+                title: '{% trans %}RFPLayer command system{% endtrans %}',
+                text: data.content.rfplayerID + " :" + data.content.error,
+                delay: 6000
+            });
+        } else {
+            if (value != "") {value = " = " +value};
+            new PNotify({
+                type: 'success',
+                title: '{% trans %}RFPLayer command system{% endtrans %}',
+                text: data.content.rfplayerID + " : "+cmd+value,
+                delay: 6000
+            });
+        };
+    });
+});
+
 $(document).ready( function() {
+
+    $('#rundongle').click(function() {
+        var act = 'stop';
+        if ($('#rundongle-ic').hasClass('fa-play')) {act = 'start'};
+        $('#rundongle').addClass('disabled'); // Disables visually + functionally
+        sendRequest("rfplayer.client." + act, {"rfplayerID": activeDongle}, function(data, result) {
+            $('#rundongle').removeClass('disabled');
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: '{% trans %}fail{% endtrans %} ' + act + ' {% trans %}RFPLayer dongle{% endtrans %} '+data.content.rfplayerID,
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                new PNotify({
+                    type: 'success',
+                    title: act + ' {% trans %}RFPLayer dongle{% endtrans %} '+data.content.rfplayerID,
+                    text: '{% trans %}Command{% endtrans %} '+ act + ' {% trans %}sended{% endtrans %}.',
+                    delay: 4000
+                });
+            };
+        });
+    });
 
    $("#btMonitor").click(function(){
         var  request = "stopmonitorclient";
@@ -125,7 +233,20 @@ $(document).ready( function() {
         if (msgId[0] == "rfplayer") {
             if (msgId[1] == "client") {
                 switch (msgId[2]) {
-                    case "updatefirmware" :
+                    case "state" :
+                        if (data.content.rfplayerID == activeDongle) {
+                            switch (data.content.state) {
+                                case "alive":
+                                case "starting":
+                                    $("#rundongle-text").text(" Stop dongle");
+                                    $("#rundongle-ic").attr('style', "color: red").removeClass().addClass("fa fa-stop");
+                                    break;
+                                case "stopped":
+                                case "dead":
+                                    $("#rundongle-text").text(" Start dongle");
+                                    $("#rundongle-ic").attr('style', "color: green").removeClass().addClass("fa fa-play");
+                                };
+                        };
                         break;
                 };
             };

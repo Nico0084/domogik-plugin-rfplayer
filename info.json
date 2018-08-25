@@ -191,6 +191,20 @@
                 "round_value": 0
             }
         },
+        "jamming": {
+            "name": "Jamming",
+            "incremental" : false,
+            "data_type": "DT_Bool",
+            "conversion": "",
+            "timeout" : 0,
+            "history": {
+                "store": true,
+                "duplicate" : true,
+                "max": 0,
+                "expire": 0,
+                "round_value": 0
+            }
+        },
         "low_battery": {
             "name": "Low battery",
             "incremental" : false,
@@ -496,7 +510,7 @@
             "parameters" : [{
                     "key" : "device",
 					"xpl": false,
-                    "description" : "RPF1000 usb device : /dev/rfp1000",
+                    "description" : "RPF1000 usb device. Example: /dev/rfp1000",
                     "type" : "string"
                 },
                 {
@@ -504,6 +518,20 @@
 					"xpl": false,
                     "description" : "Timer (seconds) for poll RFP status (0 to desactivat)",
                     "type" : "integer"
+                }
+            ]
+        },
+        "rfplayer.jamming.alert" : {
+            "description" : "Detects jamming attempts of your installation on all protocols operating on the 433 and 868 Mhz frequency. Only one device is possible.",
+            "id" : "rfplayer.rfp1000",
+            "name" : "Jamming detection",
+            "commands" : [],
+            "sensors" : ["jamming"],
+            "parameters" : [{
+                    "key" : "device",
+					"xpl": false,
+                    "description" : "Device address. Must be set to 0",
+                    "type" : "string"
                 }
             ]
         },
@@ -754,7 +782,7 @@
         "domogik_min_version" : "0.5.0",
         "name" : "rfplayer",
          "type" : "plugin",
-        "version" : "0.1.1"
+        "version" : "0.1.2"
     },
     "json_version" : 2
 }

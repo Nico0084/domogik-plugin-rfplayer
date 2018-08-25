@@ -43,6 +43,33 @@
 
 <script type="text/javascript">
 
+    function toggleVisible(target_selector, icon_selector) {
+      var $target = $("[id^='"+target_selector+"']" );
+      if ($target.is(':hidden')) {
+        $target.show("fast" );
+        $('#'+icon_selector).removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+      } else {
+        $target.hide( "fast" );
+        $('#'+icon_selector).removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+      };
+    };
+
+    function validateRegex(source, regex){
+      //  regex = "^0x([0-9A-F]{2}){4}$|^[1-9]$|^[0-9]{2,9}$";
+        var re = new RegExp(regex);
+        var id = source.id.split("cmdsys_")[1];
+        if (re.test(source.value)) {
+            $(source).parent().removeClass("has-error ").addClass("has-success");
+            $('#cmdsysSend_'+id).removeAttr("disabled").attr("data-original-title", "OK").tooltip({ html:true });
+            return true;
+        } else {
+            $(source).parent().removeClass("has-success").addClass("has-error");
+            var title = $(source).attr("placeholder")
+            $('#cmdsysSend_'+id).attr("disabled", "").attr("data-original-title", title).tooltip({ html:true });
+            return false;
+        };
+    };
+
     function requestRefreshDongle(action, rfplayerID) {
         sendRequest("rfplayer.client.getinfos", {"rfplayerID": rfplayerID}, function(data, result) {
             if (result == "error" || data.result == "error") {
@@ -54,11 +81,17 @@
                 });
             } else {
                 renderBlockGeneral(data.content);
+                renderBlockSystem(data.content);
                 $("#general-pre").text(JSON.stringify(data.content, null, 4));
-                $("#reception-cont").append(renderBlockProtocols('receiver', data.content));
+                $("#reception_protocols").append(renderFormProtocols('receiver', data.content.status.systemStatus.protocols.receiver));
                 for (var b=0; b < data.content.status.radioStatus.length; b++) {
-                    $("#reception-cont").append(renderBlockBand(data.content.status.radioStatus[b]));
+                    $("#reception-cont").append("<div  id='panel_"+data.content.status.radioStatus[b].band+"'>"+
+                                renderBlockBand(data.content.status.radioStatus[b])+
+                                "</div>");
                 }
+                $("#cmdprotocols").html(renderFormCommand(data.content.status.systemStatus.protocols.transmitter));
+                $("#repeater_protocols").append(renderFormProtocols('repeater', data.content.status.systemStatus.protocols.repeater));
+                renderBlockTranscoderList(data);
                 $('[data-toggle="tooltip"]').tooltip({
                     html:true
                 });
@@ -86,6 +119,44 @@
         return '<div class="col-md-3"><li title="'+params.help+'"><b>'+name+' :</b> '+params.value+' '+params.unit+comment+'</li></div>';
     };
 
+    function renderCmdSystem(name, params) {
+        var help = "";
+        if (params.help != "") {
+            help = '<span class="fa fa-info-circle fa-lg icon-info" data-toggle="tooltip" data-placement="top" title="'+params.help+'"></span>';
+        };
+        if (params.cmd.type=='select') {
+            var html = '<div class="col-md-4"><div class="input-group placeholder">'+
+                '<label for="cmdsys_'+params.cmd.name+'" data-toggle="tooltip" data-placement="left" title="'+params.cmd.params.help+'">'+name+' : '+help+'</label>'+
+                '<select class="form-control actdisable" id="cmdsys_'+params.cmd.name+'" onchange="setCmdSystem(this);">'+
+                '<option hidden >{% trans %}Select option{% endtrans %}</option>';
+            for (option in ordered(params.cmd.params.values)) {
+                html += '<option value="'+option+'">'+params.cmd.params.values[option]+'</option>';
+            };
+            html += '</select></div></div>';
+        } else if (params.cmd.type=='string') {
+            html =  '<div class="col-md-4" id="cmdsysOpt_'+params.cmd.name+'">'+
+                '<label for="cmdsys_'+params.cmd.name+'">'+name+' : '+help+'</label>'+
+                '<div class="input-group">'+
+                    '<input type="text" class="form-control input-sm" id="cmdsys_'+params.cmd.name+'" placeholder="'+params.cmd.params.help+'" onchange="return(validateRegex(this, '+"'"+params.cmd.params.values+"'"+'));">'+
+                    '<span class="input-group-addon">'+
+                        '<span id="cmdsysSend_'+params.cmd.name+'" class="btn btn-xs btn-info" onclick="setCmdSystem($('+"'#cmdsys_"+params.cmd.name+"'"+')[0]);" data-toggle="tooltip" data-placement="right" title="'+params.cmd.params.help+'">'+
+                            '<span class="glyphicon glyphicon-send">'+
+                            '</span>'+
+                        '</span>'+
+                    '</span>'+
+                '</div>'+
+            '</div>';
+        } else if (params.cmd.type=='empty') {
+            html =  '<div class="col-md-4" id="cmdsysOpt_'+params.cmd.name+'">'+
+                '<label for="cmdsys_'+params.cmd.name+'">'+name+' : '+help+'</label>'+
+                '<button type="button" class="btn btn-primary center-block" id="cmdsys_'+params.cmd.name+'" style="margin-left: inherit;" onclick="setCmdSystem(this);" data-toggle="tooltip" data-placement="left" title="'+params.cmd.params.help+'>'+
+                    '<i id="cmdsys-ic_'+params.cmd.name+'" class="fa fa-paper-plane icon-success" aria-hidden="true"></i><span id="cmdsys-text_'+params.cmd.name+'"> '+params.cmd.name+'</span>'+
+                '</button>'+
+            '</div>';
+        };
+        return html;
+    };
+
     function renderSelectParam(name, params) {
         var help = "";
         if (params.help != "") {
@@ -93,45 +164,60 @@
         };
         var html = '<div class="col-md-3"><div class="input-group placeholder">'+
             '<label for="'+name+'" data-toggle="tooltip" data-placement="left" title="'+params.command.help+'">'+name+' : '+help+'</label>'+
-            '<select class="form-control actdisable" id="'+name+'">';
-        for (option in  params.command.values) {
+            '<select class="form-control actdisable" id="'+name+'" onchange="setBandParam(this);">';
+        for (option in ordered(params.command.values)) {
             selected = ''
             if (option == params.value) {selected = " selected";};
-            html += '<option value="'+option+'"'+selected+'>'+params.command.values[option]+'</option>'
+            html += '<option value="'+option+'"'+selected+'>'+params.command.values[option]+'</option>';
         };
-        html += '</select></div></div>'
-        return html
+        html += '</select></div></div>';
+        return html;
     };
 
-    function renderBlockProtocols(mode, data){
-        html = "<div class='panel panel-default'>"+
-               "<div class='panel-heading' data-toggle='tooltip' data-placement='top' title='{% trans %}Select activate protocols for reception{% endtrans %}'>"+
-                    "<h4>{% trans %}Protocols status{% endtrans %}</h4>"+
-               "</div>"+
-               "<div class='panel-body' id='"+mode+"_protocols'>"+
-                "<form>";
-        for (var p in data.status.systemStatus.protocoles[mode]) {
+    function renderFormProtocols(mode, protocol) {
+        var html = "<form id='protocols_"+mode+"'>";
+        for (var p in ordered(protocol)) {
             checked = ""
-            if (data.status.systemStatus.protocoles[mode][p]) {checked = "checked";};
-              html += "<label class='checkbox-inline' style='margin-left: 50px;'><input type='checkbox' value='"+p+"'"+checked+">"+p+"</label>";
+            if (protocol[p]) {checked = "checked";};
+              html += "<label class='checkbox-inline' style='margin-left: 50px;'><input type='checkbox' class='rf_protocol' onchange='toggleProtocol(this, "+'"'+mode+'"'+")' value='"+p+"'"+checked+">"+p+"</label>";
         };
         html += "</form>";
-        html += "</div></div>";
         return html;
+    };
+
+    function toggleProtocol(protocol, mode) {
+        var state = protocol.checked;
+        sendRequest("rfplayer.client.setprotocol", {"rfplayerID": activeDongle, "mode": mode, "protocol": protocol.value, "state": state}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: '{% trans %}RFPLayer protocol activation{% endtrans %}',
+                    text: data.content.rfplayerID + " :" + data.content.error,
+                    delay: 6000
+                });
+            } else {
+                new PNotify({
+                    type: 'success',
+                    title: '{% trans %}RFPLayer protocol activation{% endtrans %}',
+                    text: data.content.rfplayerID +" : "+ mode +" "+protocol.value+" = "+state,
+                    delay: 6000
+                });
+            };
+        });
     };
 
     function renderBlockBand(band) {
         var enable = "danger";
-        var btBand = "<button class='btn btn-default center-block' id='runband_"+band.band+"'>"+
+        var btBand = "<button class='btn btn-default center-block' id='runband_"+band.band+"' onclick='startStopBand(this)'>"+
                     "<i class='fa fa-play' id='runband-ic"+band.band+"' style='color:green'></i>"+
                         "<span id='runctrl-text"+band.band+"'> Activate</span>"+
                     "</button>";
         if (band.params.Frequency.value != "0" || band.params.RFlink.value == "1") {
             enable = "success";
-            btBand = "<button class='btn btn-default center-block' id='runband_"+band.band+"'>"+
+            btBand = "<button class='btn btn-default center-block' id='runband_"+band.band+"' onclick='startStopBand(this)'>"+
                         "<i class='fa fa-stop' id='runband-ic"+band.band+"' style='color:red'></i>"+
                             "<span id='runctrl-text"+band.band+"'> Desactivate</span>"+
-                        "</button>"
+                        "</button>";
             };
         html = "<div class='panel panel-default'>"+
                "<div class='panel-heading'>"+
@@ -139,16 +225,109 @@
                         "<div class='pull-right'><i id='band-ic_"+band.band+"' class='fa fa-2x fa-feed fa-rotate-180 icon-"+enable+"'></i></div>"+btBand+
                     "</h4>"+
                "</div>"+
-               "<div class='panel-body' id='band_"+band.band+"'><form>"
-        for (var param in band.params) {
+               "<div class='panel-body' id='band_"+band.band+"'><form>"+
+               "<div class='row'>";
+        for (var param in ordered(band.params)) {
             if ('command' in band.params[param]) {
                 html += renderSelectParam(param, band.params[param]);
-            } else {
+            };
+        };
+        html += "</div><div class='well well-sm' style='margin-top: 10px;'><div class='row'>"
+        for (var param in ordered(band.params)) {
+            if (!('command' in band.params[param])) {
                 html += renderValueParam(param, band.params[param]);
             };
         };
-        html += "</form></div>";
+        html += "</div></div></form></div>";
         return html;
+    };
+
+    function renderFormCommand(protocols) {
+        var html = "";
+        for (p in ordered(protocols)) {
+            html += "<option value="+p+">"+p+"</option>";
+        };
+        return html;
+    };
+
+    function setBandParam(source) {
+        var band = $(source).closest(".panel-body")[0].id.slice(5);  // from "band_"
+        var param = source.id;
+        var value = source.value;
+        sendRequest("rfplayer.client.setbandparam", {"rfplayerID": activeDongle, "band": band, "param": param, "value": value}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: '{% trans %}RFPLayer set band parameter{% endtrans %}',
+                    text: data.content.rfplayerID + " :" + data.content.error,
+                    delay: 6000
+                });
+            } else {
+                new PNotify({
+                    type: 'success',
+                    title: '{% trans %}RFPLayer set band parameter{% endtrans %}',
+                    text: data.content.rfplayerID +" ("+ band +") : "+param+" = "+value,
+                    delay: 6000
+                });
+            };
+        });
+    };
+
+    function startStopBand(source) {
+        var band = source.id.slice(8);  // from "runband_"
+        var value = false;
+        if ($("#runband-ic"+band).hasClass('fa-stop')) {
+            var value = "0";
+            $("#runband-ic"+band).removeClass('fa-stop').addClass('fa-play').css({'color':'green'});
+            $("#runctrl-text"+band).text(' Activate');
+            $("#band-ic_"+band).removeClass('icon-success').addClass('icon-danger');
+        } else {
+            var values = $("#band_"+band).find('#Frequency').children();
+            for (v=0; v < values.length; v++) {
+                if ($(values[v]).text().indexOf("Default") >= 0) {
+                    var value = $(values[v]).val();
+                    break;
+                };
+            };
+            if (!value) {
+                for (v=0; v < values.length; v++) {
+                    if ($(values[v]).val() != "0") {
+                        var value = $(values[v]).val();
+                        break;
+                    };
+                };
+            };
+            $("#runband-ic"+band).removeClass('fa-play').addClass('fa-stop').css({'color':'red'});
+            $("#runctrl-text"+band).text(' Desactivate');
+            $("#band-ic_"+band).removeClass('icon-danger').addClass('icon-success');
+        };
+        sendRequest("rfplayer.client.setbandparam", {"rfplayerID": activeDongle, "band": band, "param": 'Frequency', "value": value}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: '{% trans %}RFPLayer start/stop RF band{% endtrans %}',
+                    text: data.content.rfplayerID + " :" + data.content.error,
+                    delay: 6000
+                });
+            } else {
+                if (value == "0") { value = "Stopped";
+                } else { value = "started";};
+                new PNotify({
+                    type: 'success',
+                    title: '{% trans %}RFPLayer start/stop RF band{% endtrans %}',
+                    text: data.content.rfplayerID +" band "+band+"  "+value,
+                    delay: 6000
+                });
+            };
+        });
+    };
+
+    function setCmdSystem(source) {
+        var cmd = source.id.slice(7);  // from "cmdsys_"
+        var value = source.value;
+        $('#cmdSys').text(cmd);
+        $('#cmdVal').text(value);
+        $('#confirmCmdSys').modal('show');
     };
 
     $( document ).ready(function() {
@@ -170,43 +349,52 @@
             var msgId = data.msgid.split(".");
             if (msgId[0] == "rfplayer") {
                 if (msgId[1] == "client") {
-                    console.log("data");
+                    console.log(data);
                     if (msgId[2] == "state") {
-                        if (data.content.rfplayerID == activeDongle) {
-                            if (data.content.monitored != '') {
-                                $("#btMonitor-ic").removeClass("fa-play icon-success").addClass("fa-stop icon-danger");
-                                $("#btMonitor-text").text(" Stop monitoring");
-                            } else {
-                                 $("#btMonitor-ic").removeClass("fa-stop icon-danger").addClass("fa-play icon-success");
-                                $("#btMonitor-text").text(" Start monitoring");
+                        {% if manager.rfPlayers|length == 0 %}
+                            location.reload();
+                        {% else %}
+                            if (data.content.rfplayerID == activeDongle) {
+                                if (data.content.monitored != '') {
+                                    $("#btMonitor-ic").removeClass("fa-play icon-success").addClass("fa-stop icon-danger");
+                                    $("#btMonitor-text").text(" Stop monitoring");
+                                } else {
+                                     $("#btMonitor-ic").removeClass("fa-stop icon-danger").addClass("fa-play icon-success");
+                                    $("#btMonitor-text").text(" Start monitoring");
+                                };
+                                renderBlockGeneral(data.content);
+                                for (mode in data.content.status.systemStatus.protocols) {
+                                    $("#protocols_"+mode).html(renderFormProtocols(mode, data.content.status.systemStatus.protocols[mode]));
+                                };
+                                for (var b=0; b < data.content.status.radioStatus.length; b++) {
+                                    $("#panel_"+data.content.status.radioStatus[b].band).html(renderBlockBand(data.content.status.radioStatus[b]));
+                                };
+                                var title = data.content.state;
+                                switch (data.content.state) {
+                                    case 'alive' :
+                                        break;
+                                    case 'stopped' :
+                                        $("#manager-info").html("");
+                                        $("[id^='ctrl-info']").html("");
+                                        break;
+                                    case 'starting' :
+                                        $("#manager-info").html("");
+                                        $("[id^='ctrl-info']").html("");
+                                        break;
+                                    case 'dead' :
+                                        $("#manager-info").html("");
+                                        $("[id^='ctrl-info']").html("");
+                                        title += " :"+data.content.error;
+                                        break;
+                                    default :
+                                        $("#manager-info").html("");
+                                        $("[id^='ctrl-info']").html("");
+                                        title += " :"+data.content.lasterror;
+                                };
+                                $("#ctrl-tab_"+data.content.rfplayerID).removeClass().addClass("label status-"+data.content.state).attr('data-original-title', title);
+                                $('[data-toggle="tooltip"]').tooltip({ html:true });
                             };
-                            switch (data.content.status) {
-                                case 'dead' :
-                                    $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}OUPS, Plugin fail ! check domogik logs{% endtrans %}." +
-                                        "<br>{% trans %}Error{% endtrans %} : " + data.content.error);
-                                    $("#manager-info").html("");
-                                    $("[id^='ctrl-info']").html("");
-                                    break;
-                                case 'stopped' :
-                                    $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-info'></i> {% trans %}Plugin stopped{% endtrans %}.");
-                                    $("#manager-info").html("");
-                                    $("[id^='ctrl-info']").html("");
-                                    break;
-                                case 'starting' :
-                                    $("#ozw-info").html("<i class='fa fa-smile-o icon-info'></i> {% trans %}Openzwave Library starting, should be running soon...{% endtrans %}");
-                                    $("#manager-info").html("");
-                                    $("[id^='ctrl-info']").html("");
-                                    break;
-                                case 'alive' :
-                                    $("#ozw-info").html("<i class='fa fa-smile-o icon-success'></i> {% trans %}Openzwave Library ready{% endtrans %}.");
-                                    break;
-                                default :
-                                    $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}OUPS, Unknown OpenZwave library status : {% endtrans %}" + data.content.status +
-                                        "<br>{% trans %}Error{% endtrans %} : " + data.content.error);
-                                    $("#manager-info").html("");
-                                    $("[id^='ctrl-info']").html("");
-                            };
-                        };
+                        {% endif %}
                     };
                 };
                 if (msgId[1] == "manager") {
